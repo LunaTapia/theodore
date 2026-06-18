@@ -1,17 +1,15 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>西奥多 · 神经保护助手</title>
-    
-    <!-- ===== PWA Manifest (内嵌) ===== -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuilv+WkquW8oCAuIOezu+eyvui1hOaCqOadjuaJiyIsCiAgInNob3J0X25hbWUiOiAi6KW/5aSq5bygIiwKICAiZGVzY3JpcHRpb24iOiAi56We54K5L+WQjeazqeaLm+WPr+WPr+mAmui/hyDkuIDkuKrkuK3mlL7lubTlj4LkuIrnmoTpmLLlnLrmr5TvvIzlvIDkuKrkvaDlpJrlvKDvvIwiLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGEwYTBmIiwKICAidGhlbWVfY29sb3IiOiAiI2ZmNmI2YiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDUxMiA1MTInPjxyZWN0IHdpZHRoPSc1MTInIGhlaWdodD0nNTEyJyByeD0nNjQnIGZpbGw9JyMwYTBhMGYnLz48dGV4dCB4PScyNTYnIHk9JzI4MCcgZm9udC1mYW1pbHk9J1NlZ29lIFVJLCBzYW5zLXNlcmlmJyBmb250LXNpemU9JzI4MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nI2ZmNmI2YicgZm9udC13ZWlnaHQ9JzUwMCc+5Z2kPC90ZXh0Pjx0ZXh0IHg9JzI1NicgeT0nMzUwJyBmb250LWZhbWlseT0nU2Vnb2UgVUksIHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMzInIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9J3JnYmEoMjU1LDI1NSwyNTUsMC40KSc+5b6M5L6bPC90ZXh0Pjwvc3ZnPg==IiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIiwKICAgICAgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIgogICAgfQogIF0KfQ==">
-    
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>西奥多 · 神经保护助手</title>
+<!-- ===== PWA Manifest (内嵌) ===== -->
+<link href="data:application/json;base64,eyJuYW1lIjoi6KW/5aWl5aSaIMK3IOelnue7j+S/neaKpOWKqeaJiyIsInNob3J0X25hbWUiOiLopb/lpaXlpJoiLCJkZXNjcmlwdGlvbiI6Iuelnue7j+S/neaKpOWKqeaJiyAtIOWfuuS6jua/gOe0oOaOqOeul+S4juefpeivhuWbvuiwseeahOS4quS6uuWBpeW6t+WuiOaKpOezu+e7nyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwib3JpZW50YXRpb24iOiJwb3J0cmFpdCIsInN0YXJ0X3VybCI6Ii4iLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGEwZiIsInRoZW1lX2NvbG9yIjoiI2ZmNmI2YiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJz48cmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgcng9JzY0JyBmaWxsPSclMjMwYTBhMGYnLz48dGV4dCB4PScyNTYnIHk9JzI4MCcgZm9udC1mYW1pbHk9J1NlZ29lIFVJLCBzYW5zLXNlcmlmJyBmb250LXNpemU9JzI4MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nJTIzZmY2YjZiJyBmb250LXdlaWdodD0nNTAwJz7wn6egPC90ZXh0Pjx0ZXh0IHg9JzI1NicgeT0nMzUwJyBmb250LWZhbWlseT0nU2Vnb2UgVUksIHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMzInIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9J3JnYmEoMjU1LDI1NSwyNTUsMC40KSc+6KW/5aWl5aSaPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9XX0=" rel="manifest"/>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
         /* ============================================================
                    西奥多 · 神经保护助手 - 完整样式表
                    ============================================================ */
@@ -435,171 +433,240 @@
             padding: 6px 12px; border-radius: 6px;
             font-size: 13px; width: 100%; margin-top: 4px;
         }
-    </style>
+    
+        /* 预测/建议列表项可点击样式 */
+        #prediction-list li.clickable,
+        #advice-list li.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        #prediction-list li.clickable:hover,
+        #advice-list li.clickable:hover {
+            background: rgba(255,255,255,0.08);
+            border-left-color: #ff6b6b;
+            transform: translateX(4px);
+        }
+        #prediction-list li.clickable:active,
+        #advice-list li.clickable:active {
+            transform: translateX(2px);
+        }
+
+        /* 详情面板连接项样式 */
+        .connection-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease;
+        }
+        .connection-item:hover {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            padding-left: 8px;
+            margin-left: -8px;
+        }
+        .conn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .conn-name {
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+        }
+        .conn-relation {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85em;
+            margin-left: auto;
+        }
+        .conn-direction {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85em;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* 详情面板章节样式 */
+        .detail-section {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .detail-section:last-child {
+            border-bottom: none;
+        }
+        .detail-section h4 {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .detail-section p {
+            color: rgba(255,255,255,0.6);
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .detail-section strong {
+            color: rgba(255,255,255,0.85);
+        }
+</style>
 </head>
 <body>
 <body>
-    <!-- ===== 顶部导航 ===== -->
-    <div class="top-bar">
-        <div class="logo">🧠 西奥多 <span>· 保护者</span></div>
-        <div class="spacer"></div>
-        <span class="task-badge" id="task-badge">1</span>
-        <span class="time" id="top-time">--:--</span>
-        <span class="status" id="top-status">● 在线</span>
-    </div>
-
-    <!-- ===== 主应用容器 ===== -->
-    <div class="app-container" id="app">
-        
-        <!-- 操作栏 -->
-        <div class="card" style="padding:8px 12px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-primary btn-sm" id="btn-simulate">🔄 更新数据</button>
-            <button class="btn btn-success btn-sm" id="btn-auto-toggle">▶ 自动 (30s)</button>
-            <button class="btn btn-outline btn-sm" id="btn-reset">↺ 重置</button>
-            <span class="text-muted" style="margin-left:auto;" id="last-update">--</span>
-        </div>
-
-        <!-- ===== 激素仪表盘 ===== -->
-        <div class="card">
-            <h3>
+<!-- ===== 顶部导航 ===== -->
+<div class="top-bar">
+<div class="logo">🧠 西奥多 <span>· 保护者</span></div>
+<div class="spacer"></div>
+<span class="task-badge" id="task-badge">1</span>
+<span class="time" id="top-time">--:--</span>
+<span class="status" id="top-status">● 在线</span>
+</div>
+<!-- ===== 主应用容器 ===== -->
+<div class="app-container" id="app">
+<!-- 操作栏 -->
+<div class="card" style="padding:8px 12px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+<button class="btn btn-primary btn-sm" id="btn-simulate">🔄 更新数据</button>
+<button class="btn btn-success btn-sm" id="btn-auto-toggle">▶ 自动 (30s)</button>
+<button class="btn btn-outline btn-sm" id="btn-reset">↺ 重置</button>
+<span class="text-muted" id="last-update" style="margin-left:auto;">--</span>
+</div>
+<!-- ===== 激素仪表盘 ===== -->
+<div class="card">
+<h3>
                 📊 激素实时水平
                 <span class="badge" id="hormone-count">13</span>
-                <span class="confidence" id="overall-confidence">可信度 --</span>
-            </h3>
-            <div class="hormone-grid" id="hormone-grid"></div>
+<span class="confidence" id="overall-confidence">可信度 --</span>
+</h3>
+<div class="hormone-grid" id="hormone-grid"></div>
+</div>
+<!-- ===== 预测区 ===== -->
+<div class="card">
+<h3>🔮 未来 6 小时预测 <span class="badge" id="pred-count">0</span></h3>
+<ul class="prediction-list" id="prediction-list">
+<li style="color:rgba(255,255,255,0.2);">等待数据更新...</li>
+</ul>
+</div>
+<!-- ===== 调节建议 ===== -->
+<div class="card">
+<h3>💡 调节建议 <span class="badge">优先级排序</span></h3>
+<ul class="advice-list" id="advice-list">
+<li style="color:rgba(255,255,255,0.2);">等待数据更新...</li>
+</ul>
+</div>
+<!-- ===== 知识图谱 ===== -->
+<div class="card">
+<h3>🧬 知识图谱 <span class="badge">节点动态激活</span></h3>
+<div id="graph-container">
+<svg id="graph-svg"></svg>
+</div>
+<div class="text-muted text-center mt-8">点击节点查看详情 · 激活节点高亮</div>
+</div>
+<!-- ===== 趋势看板（简版） ===== -->
+<div class="card" id="trend-card">
+<h3>📈 3天恢复趋势 <span class="badge">健康评分</span></h3>
+<div style="position:relative; height:200px; width:100%;">
+            <canvas id="trend-chart" style="width:100%; height:100%;"></canvas>
         </div>
-
-        <!-- ===== 预测区 ===== -->
-        <div class="card">
-            <h3>🔮 未来 6 小时预测 <span class="badge" id="pred-count">0</span></h3>
-            <ul class="prediction-list" id="prediction-list">
-                <li style="color:rgba(255,255,255,0.2);">等待数据更新...</li>
-            </ul>
-        </div>
-
-        <!-- ===== 调节建议 ===== -->
-        <div class="card">
-            <h3>💡 调节建议 <span class="badge">优先级排序</span></h3>
-            <ul class="advice-list" id="advice-list">
-                <li style="color:rgba(255,255,255,0.2);">等待数据更新...</li>
-            </ul>
-        </div>
-
-        <!-- ===== 知识图谱 ===== -->
-        <div class="card">
-            <h3>🧬 知识图谱 <span class="badge">节点动态激活</span></h3>
-            <div id="graph-container">
-                <svg id="graph-svg"></svg>
-            </div>
-            <div class="text-muted text-center mt-8">点击节点查看详情 · 激活节点高亮</div>
-        </div>
-
-        <!-- ===== 趋势看板（简版） ===== -->
-        <div class="card" id="trend-card">
-            <h3>📈 3天恢复趋势 <span class="badge">健康评分</span></h3>
-            <canvas id="trend-chart" height="60" style="width:100%; height:60px;"></canvas>
-            <div class="flex flex-wrap gap-4 mt-8" style="justify-content:space-between;">
-                <span class="text-muted">今日完成: <strong id="today-complete">0</strong>/<span id="today-total">0</span></span>
-                <span class="text-muted">尝试次数: <strong id="attempt-count">0</strong></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== 任务遮罩（强制执行） ===== -->
-    <div class="task-overlay" id="task-overlay">
-        <div class="task-card">
-            <h2 id="task-title">⚠️ 西奥多需要你</h2>
-            <p id="task-desc">你的身体信号显示需要立即采取行动。</p>
-            <div class="task-progress"><div class="fill" id="task-progress-fill" style="width:0%;"></div></div>
-            <button class="btn-task" id="task-confirm-btn">✅ 我完成了</button>
-            <button class="btn-task secondary" id="task-snooze-btn">⏱ 稍后提醒 (5分钟)</button>
-            <div class="reminder-level" id="task-reminder-level">提醒等级: 1/3</div>
-        </div>
-    </div>
-
-    <!-- ===== 紧急保护按钮 ===== -->
-    <button class="emergency-btn" id="emergency-btn">
+<div class="flex flex-wrap gap-4 mt-8" style="justify-content:space-between;">
+<span class="text-muted">今日完成: <strong id="today-complete">0</strong>/<span id="today-total">0</span></span>
+<span class="text-muted">尝试次数: <strong id="attempt-count">0</strong></span>
+</div>
+</div>
+</div>
+<!-- ===== 任务遮罩（强制执行） ===== -->
+<div class="task-overlay" id="task-overlay">
+<div class="task-card">
+<h2 id="task-title">⚠️ 西奥多需要你</h2>
+<p id="task-desc">你的身体信号显示需要立即采取行动。</p>
+<div class="task-progress"><div class="fill" id="task-progress-fill" style="width:0%;"></div></div>
+<button class="btn-task" id="task-confirm-btn">✅ 我完成了</button>
+<button class="btn-task secondary" id="task-snooze-btn">⏱ 稍后提醒 (5分钟)</button>
+<div class="reminder-level" id="task-reminder-level">提醒等级: 1/3</div>
+</div>
+</div>
+<!-- ===== 紧急保护按钮 ===== -->
+<button class="emergency-btn" id="emergency-btn">
         🛡
         <span class="label">紧急</span>
-    </button>
-
-    <!-- ===== 底部导航 ===== -->
-    <div class="bottom-nav">
-        <button class="nav-item active" data-tab="dashboard">
-            <span class="icon">📊</span>
-            <span>仪表</span>
-        </button>
-        <button class="nav-item" data-tab="graph">
-            <span class="icon">🧬</span>
-            <span>图谱</span>
-        </button>
-        <button class="nav-item" data-tab="tasks">
-            <span class="icon">✅</span>
-            <span>任务</span>
-            <span class="task-badge show" style="font-size:8px; padding:1px 6px; position:absolute; top:-2px; right:-8px;">0</span>
-        </button>
-        <button class="nav-item" data-tab="settings">
-            <span class="icon">⚙️</span>
-            <span>设置</span>
-        </button>
-    </div>
-
-    <!-- ===== 详情面板 ===== -->
-    <div id="detail-panel">
-        <button class="close-detail" id="close-detail">×</button>
-        <h2 id="detail-title">节点详情</h2>
-        <div class="detail-meta" id="detail-meta"></div>
-        <div class="detail-hormones" id="detail-hormones"></div>
-        <div class="detail-chain" id="detail-chain">加载中...</div>
-        <div class="detail-body" id="detail-body"></div>
-    </div>
-
-    <!-- ===== 设置面板 ===== -->
-    <div class="settings-panel" id="settings-panel">
-        <button class="close-settings" id="close-settings">×</button>
-        <h2>⚙️ 西奥多设置</h2>
-        <div class="settings-group">
-            <label><input type="checkbox" id="setting-force-lock"> 🔒 启用强制执行模式（锁屏引导）</label>
-            <div class="hint">开启后，极端危机时西奥多将锁定屏幕强制引导你完成安全练习。</div>
-        </div>
-        <div class="settings-group">
-            <label><input type="checkbox" id="setting-notifications"> 🔔 允许浏览器通知</label>
-            <div class="hint">开启后，西奥多可在后台向你推送提醒（需授权）。</div>
-        </div>
-        <div class="settings-group">
-            <label><input type="checkbox" id="setting-voice"> 🔊 语音读报</label>
-            <div class="hint">开启后，点击预测或建议可语音朗读内容。</div>
-        </div>
-        <div class="settings-group">
-            <label><input type="checkbox" id="setting-auto-update"> ⏱ 自动更新数据</label>
-            <div class="hint">每30分钟自动获取健康数据（需快捷指令配合）。</div>
-        </div>
-        <div class="settings-group">
-            <label>提醒强度</label>
-            <select id="setting-reminder-level">
-                <option value="gentle">温柔 (朋友式提醒)</option>
-                <option value="firm" selected>坚定 (教练式督促)</option>
-                <option value="force">强制 (不容忽视)</option>
-            </select>
-        </div>
-        <div class="settings-group">
-            <label>西奥多称呼</label>
-            <select id="setting-persona">
-                <option value="我">我 (第一人称)</option>
-                <option value="西奥多">西奥多 (第三人称)</option>
-            </select>
-        </div>
-        <div class="settings-group" style="border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
-            <button class="btn btn-primary" style="width:100%;" id="btn-calibrate">📐 校准激素基线</button>
-            <div class="hint">点击后系统将根据最近7天数据重新计算你的个人基线。</div>
-        </div>
-        <div class="settings-group">
-            <button class="btn btn-outline" style="width:100%;" id="btn-export-data">📤 导出数据</button>
-        </div>
-    </div>
-
-    <!-- ===== 工具提示 ===== -->
-    <div class="tooltip" id="tooltip"></div>
+</button>
+<!-- ===== 底部导航 ===== -->
+<div class="bottom-nav">
+<button class="nav-item active" data-tab="dashboard">
+<span class="icon">📊</span>
+<span>仪表</span>
+</button>
+<button class="nav-item" data-tab="graph">
+<span class="icon">🧬</span>
+<span>图谱</span>
+</button>
+<button class="nav-item" data-tab="tasks">
+<span class="icon">✅</span>
+<span>任务</span>
+<span class="task-badge show" style="font-size:8px; padding:1px 6px; position:absolute; top:-2px; right:-8px;">0</span>
+</button>
+<button class="nav-item" data-tab="settings">
+<span class="icon">⚙️</span>
+<span>设置</span>
+</button>
+</div>
+<!-- ===== 详情面板 ===== -->
+<div id="detail-panel">
+<button class="close-detail" id="close-detail">×</button>
+<h2 id="detail-title">节点详情</h2>
+<div class="detail-meta" id="detail-meta"></div>
+<div class="detail-hormones" id="detail-hormones"></div>
+<div class="detail-chain" id="detail-chain">加载中...</div>
+<div class="detail-body" id="detail-body"></div>
+</div>
+<!-- ===== 设置面板 ===== -->
+<div class="settings-panel" id="settings-panel">
+<button class="close-settings" id="close-settings">×</button>
+<h2>⚙️ 西奥多设置</h2>
+<div class="settings-group">
+<label><input id="setting-force-lock" type="checkbox"/> 🔒 启用强制执行模式（锁屏引导）</label>
+<div class="hint">开启后，极端危机时西奥多将锁定屏幕强制引导你完成安全练习。</div>
+</div>
+<div class="settings-group">
+<label><input id="setting-notifications" type="checkbox"/> 🔔 允许浏览器通知</label>
+<div class="hint">开启后，西奥多可在后台向你推送提醒（需授权）。</div>
+</div>
+<div class="settings-group">
+<label><input id="setting-voice" type="checkbox"/> 🔊 语音读报</label>
+<div class="hint">开启后，点击预测或建议可语音朗读内容。</div>
+</div>
+<div class="settings-group">
+<label><input id="setting-auto-update" type="checkbox"/> ⏱ 自动更新数据</label>
+<div class="hint">每30分钟自动获取健康数据（需快捷指令配合）。</div>
+</div>
+<div class="settings-group">
+<label>提醒强度</label>
+<select id="setting-reminder-level">
+<option value="gentle">温柔 (朋友式提醒)</option>
+<option selected="" value="firm">坚定 (教练式督促)</option>
+<option value="force">强制 (不容忽视)</option>
+</select>
+</div>
+<div class="settings-group">
+<label>西奥多称呼</label>
+<select id="setting-persona">
+<option value="我">我 (第一人称)</option>
+<option value="西奥多">西奥多 (第三人称)</option>
+</select>
+</div>
+<div class="settings-group" style="border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+<button class="btn btn-primary" id="btn-calibrate" style="width:100%;">📐 校准激素基线</button>
+<div class="hint">点击后系统将根据最近7天数据重新计算你的个人基线。</div>
+</div>
+<div class="settings-group">
+<button class="btn btn-outline" id="btn-export-data" style="width:100%;">📤 导出数据</button>
+</div>
+</div>
+<!-- ===== 工具提示 ===== -->
+<div class="tooltip" id="tooltip"></div>
 <script>
 // ===== 自动从 URL 参数加载健康数据（西奥多·手机自动导入） =====
 (function autoLoadFromURL() {
@@ -807,7 +874,7 @@
         }
         // 血清素: 日间高, 夜间低
         if (hormoneKey === 'serotonin') {
-            const expected = 50 + 15 * Math.sin(2 * Math.PI * (phase - 0.15));
+            const expected = 50 + 15 * Math.sin(2 * Math.PI * (phase - 0.25));
             return value * (expected / 50);
         }
         return value;
@@ -1610,7 +1677,7 @@
         {id:"ach_musical_instrument",name:"乐器学习",layer:"action",category:"认知",hormone:"acetylcholine",detail:"乐器演奏→听觉-运动-前额叶多系统整合→ACh↑→感觉运动可塑性↑。长期练习→胼胝体增厚→半球间协调↑。任何年龄开始都有益。"},
         {id:"cr_forest_bathing",name:"森林浴",layer:"action",category:"调节",hormone:"cortisol",detail:"森林环境→植物杀菌素(phytoncide)吸入→NK细胞活性↑→皮质醇↓。机制：自然暴露→HPA轴下调→免疫增强。建议：每月2-4小时森林漫步。"},
         {id:"cr_social_support_network",name:"社会支持网络",layer:"action",category:"系统",hormone:"cortisol",detail:"高质量社会连接→HPA轴缓冲→皮质醇反应↓。机制：感知社会支持→杏仁核威胁评估↓→HPA轴激活阈值↑。核心：可依靠的关系数量。"},
-        {id:"ox_eye_contact",name:"眼神接触练习",layer:"action",category:"社会",hormone:"oxytocin",detail:"持续眼神接触（3-5秒）→催产素↑→信任感↑。机制：眼睛是"社交窗口"→直接眼神接触→OT释放→依恋增强。注意：文化差异，避免凝视。"},
+        {id:"ox_eye_contact",name:"眼神接触练习",layer:"action",category:"社会",hormone:"oxytocin",detail:"持续眼神接触（3-5秒）→催产素↑→信任感↑。机制：眼睛是\"社交窗口\"→直接眼神接触→OT释放→依恋增强。注意：文化差异，避免凝视。"},
         {id:"ox_pet_therapy",name:"宠物疗法",layer:"action",category:"社会",hormone:"oxytocin",detail:"与宠物互动→催产素↑+皮质醇↓→血压↓。机制：抚摸→触觉-边缘系统→OT释放→依恋行为。狗>猫（互动性更强）。"},
         {id:"ox_group_exercise",name:"团体运动",layer:"action",category:"运动",hormone:"oxytocin",detail:"同步运动（舞蹈、瑜伽、团体操）→催产素↑→社会联结↑。机制：行为同步→神经同步→群体凝聚力↑。优于单独运动的社会效益。"}
     ];
@@ -2408,34 +2475,7 @@ const layerColors = {
 };
 
 
-// ===== 自动从 URL 参数加载健康数据（西奥多·手机自动导入） =====
-(function autoLoadFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const dataStr = params.get('data');
-    if (dataStr) {
-        try {
-            const data = JSON.parse(decodeURIComponent(dataStr));
-            if (typeof healthData !== 'undefined') {
-                Object.assign(healthData, data);
-                if (typeof computeHormones === 'function') {
-                    const newH = computeHormones(healthData, hormoneState);
-                    Object.assign(hormoneState, newH);
-                }
-                if (typeof hormoneHistory !== 'undefined') {
-                    hormoneHistory.push({ time: Date.now(), ...hormoneState });
-                }
-                if (typeof refreshUI === 'function') refreshUI();
-                if (typeof checkAndAssignTask === 'function') checkAndAssignTask(hormoneState);
-                console.log('✅ 已从 URL 自动加载健康数据');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                console.warn('healthData 未定义，无法加载数据');
-            }
-        } catch(e) {
-            console.warn('URL 数据解析失败', e);
-        }
-    }
-})();
+
 
 
     // ================================================================
@@ -2447,6 +2487,10 @@ const layerColors = {
     let graphSimulation = null;
     let graphNodes = [];
     let graphLinks = [];
+    let zoom = null;
+    let svg = null;
+    let g = null;
+    let simulation = null;
 
     function initGraph() {
         const container = document.getElementById('graph-container');
@@ -2461,16 +2505,16 @@ const layerColors = {
         graphNodes = allGraphNodes;
         graphLinks = allGraphLinks;
 
-        const svg = d3.select('#graph-svg')
+        svg = d3.select('#graph-svg')
             .attr('width', width)
             .attr('height', height);
 
         svg.selectAll('*').remove();
 
-        const g = svg.append('g');
+        g = svg.append('g');
 
         // 缩放
-        const zoom = d3.zoom()
+        zoom = d3.zoom()
             .scaleExtent([0.2, 3])
             .on('zoom', (event) => {
                 g.attr('transform', event.transform);
@@ -2478,7 +2522,7 @@ const layerColors = {
         svg.call(zoom);
 
         // 力导向模拟
-        const simulation = d3.forceSimulation(graphNodes)
+        simulation = d3.forceSimulation(graphNodes)
             .force('link', d3.forceLink(graphLinks)
                 .id(d => d.id)
                 .distance(d => d.type === 'cross-hormone' ? 150 : 80)
@@ -2500,8 +2544,9 @@ const layerColors = {
             .join('line')
             .attr('class', d => `link ${d.type === 'cross-hormone' ? 'cross-hormone' : ''}`)
             .attr('stroke', d => {
-                const sourceNode = graphNodes.find(n => n.id === (typeof d.source === 'string' ? d.source : d.source.id));
-                return sourceNode ? HORMONE_COLORS[sourceNode.hormone] || '#666' : '#666';
+                const sid = typeof d.source === 'string' ? d.source : (d.source ? d.source.id : '');
+                const sourceNode = graphNodes.find(n => n.id === sid);
+                return sourceNode && HORMONE_COLORS[sourceNode.hormone] ? HORMONE_COLORS[sourceNode.hormone] : '#666';
             })
             .attr('stroke-width', d => d.type === 'cross-hormone' ? 1.2 : 1.5)
             .attr('stroke-opacity', 0.25);
@@ -2530,10 +2575,12 @@ const layerColors = {
                 })
             );
 
+        // 节点大小映射
+        const sizes = { molecular: 14, cellular: 18, circuit: 22, behavioral: 20, action: 18 };
+
         // 节点圆
         node.append('circle')
             .attr('r', d => {
-                const sizes = { molecular: 6, cellular: 8, circuit: 10, behavioral: 9, action: 8 };
                 return sizes[d.layer] || 8;
             })
             .attr('fill', d => HORMONE_COLORS[d.hormone] || '#888')
@@ -2545,8 +2592,8 @@ const layerColors = {
         // 节点标签
         node.append('text')
             .attr('dy', d => {
-                const sizes = { molecular: 6, cellular: 8, circuit: 10, behavioral: 9, action: 8 };
-                return sizes[d.layer] + 14;
+                const nodeSizes = { molecular: 14, cellular: 18, circuit: 22, behavioral: 20, action: 18 };
+                return (nodeSizes[d.layer] || 16) + 14;
             })
             .text(d => d.name)
             .style('font-size', d => d.layer === 'molecular' ? '7px' : '8px')
@@ -2630,6 +2677,273 @@ const layerColors = {
         setTimeout(() => updateGraphActivation(hormoneState), 500);
     }
 
+    
+    // ---------- 显示节点详情（完整版） ----------
+    function showDetail(d) {
+        const panel = document.getElementById('detail-panel');
+        const hormoneColor = HORMONE_COLORS[d.hormone] || '#888';
+        const hormoneLabel = HORMONE_LABELS[d.hormone] || d.hormone;
+        const layerColor = layerColors[d.layer] || '#888';
+
+        // 构建连接关系HTML
+        let connectionsHtml = '';
+
+        // 上游输入（什么驱动/供给它）
+        const upstream = graphLinks.filter(l => {
+            const t = typeof l.target === 'string' ? l.target : (l.target ? l.target.id : '');
+            return t === d.id;
+        }).map(l => {
+            const s = typeof l.source === 'string' ? l.source : (l.source ? l.source.id : '');
+            const sourceNode = graphNodes.find(n => n.id === s);
+            return sourceNode ? { name: sourceNode.name, id: sourceNode.id, hormone: sourceNode.hormone, relation: l.relation || '→' } : null;
+        }).filter(Boolean);
+
+        // 下游输出（它驱动/影响什么）
+        const downstream = graphLinks.filter(l => {
+            const s = typeof l.source === 'string' ? l.source : (l.source ? l.source.id : '');
+            return s === d.id;
+        }).map(l => {
+            const t = typeof l.target === 'string' ? l.target : (l.target ? l.target.id : '');
+            const targetNode = graphNodes.find(n => n.id === t);
+            return targetNode ? { name: targetNode.name, id: targetNode.id, hormone: targetNode.hormone, relation: l.relation || '→' } : null;
+        }).filter(Boolean);
+
+        // 跨激素连接
+        const crossHormone = graphLinks.filter(l => {
+            const s = typeof l.source === 'string' ? l.source : (l.source ? l.source.id : '');
+            const t = typeof l.target === 'string' ? l.target : (l.target ? l.target.id : '');
+            return (s === d.id || t === d.id) && l.type === 'cross-hormone';
+        }).map(l => {
+            const isSource = (typeof l.source === 'string' ? l.source : l.source.id) === d.id;
+            const otherId = isSource ? (typeof l.target === 'string' ? l.target : l.target.id) : (typeof l.source === 'string' ? l.source : l.source.id);
+            const otherNode = graphNodes.find(n => n.id === otherId);
+            return otherNode ? { 
+                name: otherNode.name, 
+                id: otherNode.id, 
+                hormone: otherNode.hormone,
+                direction: isSource ? '输出至' : '接收自',
+                relation: l.relation || ''
+            } : null;
+        }).filter(Boolean);
+
+        if (upstream.length > 0) {
+            connectionsHtml += `
+                <div class="detail-section">
+                    <h4>🔗 上游输入（什么驱动/供给它）</h4>
+                    ${upstream.map(n => `
+                        <div class="connection-item" onclick="focusGraphNode('${n.id}')" style="cursor:pointer;">
+                            <span class="conn-dot" style="background:${HORMONE_COLORS[n.hormone] || '#888'}"></span>
+                            <span class="conn-name">${n.name}</span>
+                            <span class="conn-relation">${n.relation}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        if (downstream.length > 0) {
+            connectionsHtml += `
+                <div class="detail-section">
+                    <h4>🔗 下游输出（它驱动/影响什么）</h4>
+                    ${downstream.map(n => `
+                        <div class="connection-item" onclick="focusGraphNode('${n.id}')" style="cursor:pointer;">
+                            <span class="conn-dot" style="background:${HORMONE_COLORS[n.hormone] || '#888'}"></span>
+                            <span class="conn-name">${n.name}</span>
+                            <span class="conn-relation">${n.relation}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        if (crossHormone.length > 0) {
+            connectionsHtml += `
+                <div class="detail-section">
+                    <h4>🔗 跨激素连接（与其他系统的交互）</h4>
+                    ${crossHormone.map(n => `
+                        <div class="connection-item" onclick="focusGraphNode('${n.id}')" style="cursor:pointer;">
+                            <span class="conn-dot" style="background:${HORMONE_COLORS[n.hormone] || '#888'}"></span>
+                            <span class="conn-name">${n.name}</span>
+                            <span class="conn-direction">${n.direction}</span>
+                            <span class="conn-relation">${n.relation}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 构建层级逻辑描述
+        const layerDescriptions = {
+            molecular: '分子层处理神经递质本身的合成、释放、受体结合和代谢过程。这是神经系统最基础的化学层面，涉及基因表达、蛋白质合成和突触传递的微观机制。',
+            cellular: '细胞层处理单个神经元和胶质细胞的功能状态，包括膜电位、动作电位、细胞内信号转导和细胞间通讯。这是神经活动的细胞生物学基础。',
+            circuit: '回路层处理神经元群体形成的网络动态，包括局部回路、长程连接和振荡模式。这是神经计算发生的层面，涉及信息整合和模式识别。',
+            behavioral: '行为层处理神经活动如何转化为可观察的行为和心理状态。这是一个从神经到心理的涌现过程，涉及多系统协调和情境依赖的计算。',
+            action: '行动层处理个体与环境的实际交互，包括运动控制、决策执行和目标导向行为。这是神经系统的最终输出层面。'
+        };
+
+        // 构建类别机制描述
+        const categoryDescriptions = {
+            stress: '该节点涉及神经递质在应激反应中的角色。应激是多系统协调的适应反应，神经递质是系统间通讯的媒介。急性应激激活，慢性应激耗竭。',
+            reward: '该节点涉及奖赏系统的神经基础。多巴胺、阿片和大麻素系统共同编码奖赏价值，驱动学习和动机行为。',
+            sleep: '该节点涉及睡眠-觉醒周期的神经调控。食欲素、GABA和单胺系统共同维持觉醒状态，腺苷和褪黑素促进睡眠。',
+            social: '该节点涉及社会行为的神经基础。催产素和加压素调节社会认知、依恋和信任，与社会脑网络紧密互动。',
+            cognition: '该节点涉及认知功能的神经基础。乙酰胆碱、多巴胺和去甲肾上腺素调节注意、记忆和执行功能。',
+            emotion: '该节点涉及情绪加工和调节。杏仁核、前额叶和边缘系统通过多种神经递质协调情绪反应。',
+            metabolism: '该节点涉及能量代谢的神经调控。饥饿素、瘦素和胰岛素通过下丘脑调节食欲和能量平衡。',
+            reproduction: '该节点涉及生殖行为的神经内分泌调控。性激素通过下丘脑-垂体-性腺轴调节性行为和生殖功能。',
+            pain: '该节点涉及疼痛处理的神经机制。阿片系统、大麻素系统和内源性镇痛通路共同调节疼痛感知。',
+            homeostasis: '该节点涉及内环境稳态的神经调控。多种神经递质系统协调体温、血压、渗透压等生理参数。'
+        };
+
+        // 动态调节（基于当前激素水平）
+        const h = hormoneState[d.hormone] || 50;
+        const isHigh = h > 60;
+        const isLow = h < 40;
+        let regulationHtml = '';
+
+        if (isHigh) {
+            regulationHtml = `
+                <div class="detail-section">
+                    <h4>⚖️ 动态调节</h4>
+                    <p><strong style="color:#ff6b6b">当前状态：高激活</strong>（${Math.round(h)}/100）</p>
+                    <p>正向调节（增强因素）：重复暴露、强化学习、应激适应、环境丰富化、社交互动、新奇体验</p>
+                    <p>负向调节（抑制因素）：习惯化、消退、应激耗竭、环境剥夺、社会隔离、慢性压力</p>
+                    <p>反馈环路：行为结果→神经活动→递质释放→行为改变→环境反馈→新一轮调节；形成闭环学习系统</p>
+                </div>
+            `;
+        } else if (isLow) {
+            regulationHtml = `
+                <div class="detail-section">
+                    <h4>⚖️ 动态调节</h4>
+                    <p><strong style="color:#45b7d1">当前状态：低激活</strong>（${Math.round(h)}/100）</p>
+                    <p>该节点当前活动水平较低，可能处于抑制或耗竭状态。建议通过适当的刺激或干预来提升其功能水平。</p>
+                    <p>恢复策略：渐进式暴露、正向强化、环境优化、社会支持、充足休息</p>
+                </div>
+            `;
+        } else {
+            regulationHtml = `
+                <div class="detail-section">
+                    <h4>⚖️ 动态调节</h4>
+                    <p><strong>当前状态：平衡</strong>（${Math.round(h)}/100）</p>
+                    <p>该节点当前处于正常功能范围，维持当前的生活方式和调节策略即可。</p>
+                </div>
+            `;
+        }
+
+        // 临床与生活意义
+        const clinicalHtml = `
+            <div class="detail-section">
+                <h4>🎯 临床与生活意义</h4>
+                <p>该节点参与${d.category || '神经调节'}。管理策略：①认知重评改变评估方式 ②放松训练降低生理唤醒 ③社会支持提供缓冲 ④问题解决减少压力源 ⑤正念练习增强当下觉察。</p>
+            </div>
+        `;
+
+        // 组装完整详情面板
+        panel.innerHTML = `
+            <button class="close-detail" id="close-detail">×</button>
+            <h2 id="detail-title" style="color:${hormoneColor}">● ${d.name}</h2>
+            <div class="detail-meta" id="detail-meta">
+                <span class="badge" style="border-color:${hormoneColor};color:${hormoneColor}">${hormoneLabel}</span>
+                <span class="badge" style="border-color:${layerColor};color:${layerColor}">${d.layer}</span>
+                <span class="badge">${d.category || '未分类'}</span>
+            </div>
+
+            <div class="detail-body" id="detail-body">
+                <div class="detail-section">
+                    <h4>🔬 核心机制</h4>
+                    <p><strong>系统定位：</strong>这是${hormoneLabel}系统的${d.layer}层节点，属于"${d.category || '未分类'}"类别。</p>
+                    <p><strong>层级逻辑：</strong>${layerDescriptions[d.layer] || '该层级处理神经系统的特定功能层面。'}</p>
+                    <p><strong>类别机制：</strong>${categoryDescriptions[d.category] || '该节点涉及神经系统的特定功能调节。'}</p>
+                    <p><strong>节点功能：</strong>${d.detail || '暂无详细描述'}</p>
+                </div>
+
+                ${connectionsHtml}
+
+                ${regulationHtml}
+
+                ${clinicalHtml}
+
+                <div class="detail-section">
+                    <h4>📚 专业详解</h4>
+                    <p>${d.detail || '该节点的详细机制正在整理中。'}</p>
+                </div>
+
+                <div class="detail-section">
+                    <h4>🔗 关联连接</h4>
+                    <p>点击上方连接关系中的节点名称，可在图谱中聚焦到对应节点。</p>
+                </div>
+            </div>
+        `;
+
+        // 重新绑定关闭按钮事件
+        document.getElementById('close-detail').addEventListener('click', closeDetail);
+
+        panel.classList.add('open');
+    }
+
+    // ---------- 关闭详情 ----------
+    function closeDetail() {
+        document.getElementById('detail-panel').classList.remove('open');
+    }
+
+    document.getElementById('close-detail').addEventListener('click', closeDetail);
+    
+
+    // ---------- 聚焦图谱节点（从外部调用） ----------
+    function focusGraphNode(nodeId) {
+        // 确保图谱已初始化
+        if (!graphNodes || graphNodes.length === 0) {
+            console.warn('Graph not initialized yet');
+            return;
+        }
+
+        const targetNode = graphNodes.find(n => n.id === nodeId);
+        if (!targetNode) {
+            console.warn('Node not found:', nodeId);
+            return;
+        }
+
+        // 获取容器尺寸
+        const container = document.getElementById('graph-container');
+        const width = container.clientWidth;
+        const height = container.clientHeight || 340;
+
+        // 计算聚焦变换：将节点移到中心，放大到1.5倍
+        const scale = 1.5;
+        const x = width / 2 - targetNode.x * scale;
+        const y = height / 2 - targetNode.y * scale;
+
+        // 使用 D3 的 zoom transform 直接设置变换
+        const svgEl = d3.select('#graph-svg');
+        const gEl = d3.select('#graph-svg > g');
+
+        if (svgEl.node() && gEl.node()) {
+            // 平滑过渡
+            svgEl.transition().duration(750).call(
+                d3.zoom().on('zoom', null).transform,
+                d3.zoomIdentity.translate(x, y).scale(scale)
+            );
+
+            // 直接设置 g 的 transform
+            gEl.transition().duration(750)
+                .attr('transform', `translate(${x}, ${y}) scale(${scale})`);
+        }
+
+        // 高亮该节点及其连接
+        highlightConnections(nodeId, true);
+
+        // 显示详情面板
+        showDetail(targetNode);
+
+        // 3秒后取消高亮
+        setTimeout(() => {
+            highlightConnections(nodeId, false);
+        }, 3000);
+
+        // 滚动到图谱区域
+        document.getElementById('graph-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     // ---------- 高亮连接 ----------
     function highlightConnections(nodeId, active) {
         if (!active) {
@@ -2672,34 +2986,7 @@ const layerColors = {
     }
 </script>
 <script>
-// ===== 自动从 URL 参数加载健康数据（西奥多·手机自动导入） =====
-(function autoLoadFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const dataStr = params.get('data');
-    if (dataStr) {
-        try {
-            const data = JSON.parse(decodeURIComponent(dataStr));
-            if (typeof healthData !== 'undefined') {
-                Object.assign(healthData, data);
-                if (typeof computeHormones === 'function') {
-                    const newH = computeHormones(healthData, hormoneState);
-                    Object.assign(hormoneState, newH);
-                }
-                if (typeof hormoneHistory !== 'undefined') {
-                    hormoneHistory.push({ time: Date.now(), ...hormoneState });
-                }
-                if (typeof refreshUI === 'function') refreshUI();
-                if (typeof checkAndAssignTask === 'function') checkAndAssignTask(hormoneState);
-                console.log('✅ 已从 URL 自动加载健康数据');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                console.warn('healthData 未定义，无法加载数据');
-            }
-        } catch(e) {
-            console.warn('URL 数据解析失败', e);
-        }
-    }
-})();
+
 
 
     // ================================================================
@@ -2745,6 +3032,28 @@ const layerColors = {
         confEl.className = `confidence ${avgConf > 65 ? '' : avgConf > 40 ? 'med' : 'low'}`;
     }
 
+    
+    // ---------- 预测引擎 ----------
+    function computePredictions(h) {
+        const preds = [];
+        if (h.cortisol > 75 && h.norepinephrine > 70) {
+            preds.push({ name: '应激反应加剧', prob: 75, mechanism: '皮质醇+NE双高→HPA轴过度激活' });
+        }
+        if (h.serotonin < 40 && h.dopamine < 40) {
+            preds.push({ name: '情绪低落风险', prob: 65, mechanism: '5-HT+DA双低→奖赏系统抑制' });
+        }
+        if (h.ghrelin > 60 && h.leptin < 40) {
+            preds.push({ name: '暴食冲动', prob: 55, mechanism: '饥饿素↑+瘦素↓→食欲失控' });
+        }
+        if (h.orexin > 75 && h.cortisol > 60) {
+            preds.push({ name: '失眠风险', prob: 60, mechanism: '食欲素↑+皮质醇↑→觉醒过度' });
+        }
+        if (h.cannabinoid < 35 && h.stress > 7) {
+            preds.push({ name: '焦虑加剧', prob: 50, mechanism: '内源性大麻素↓→应激调节受损' });
+        }
+        return preds;
+    }
+    
     // ---------- 渲染预测 ----------
     function renderPredictions(h) {
         const container = document.getElementById('prediction-list');
@@ -2758,10 +3067,25 @@ const layerColors = {
 
         document.getElementById('pred-count').textContent = preds.length;
 
+        // 预测名称到图谱节点ID的映射
+        const predNodeMap = {
+            '应激反应加剧': 'ne_stress_response',
+            '情绪低落风险': 'ht_depression_5ht',
+            '暴食冲动': 'gh_appetite_ghrelin',
+            '失眠风险': 'ox_insomnia_orexin',
+            '焦虑加剧': 'ne_anxiety',
+            '注意力崩溃': 'ne_attention',
+            '社交退缩': 'ox_social_decluttering',
+            '执行功能瘫痪': 'da_working_memory'
+        };
+
         container.innerHTML = preds.slice(0, 6).map(p => {
             const probCls = p.prob > 60 ? '' : 'low';
+            const nodeId = predNodeMap[p.name] || '';
+            const clickable = nodeId ? 'clickable' : '';
+            const onclick = nodeId ? `onclick="focusGraphNode('${nodeId}')"` : '';
             return `
-                <li>
+                <li class="${clickable}" ${onclick} title="${nodeId ? '点击查看图谱节点' : ''}">
                     <div style="flex:1;">
                         <strong>${p.name}</strong>
                         <span class="mechanism">${p.mechanism || ''}</span>
@@ -2772,6 +3096,31 @@ const layerColors = {
         }).join('');
     }
 
+    
+    // ---------- 建议引擎 ----------
+    function computeAdvice(h) {
+        const advice = [];
+        if (h.cortisol > 75) {
+            advice.push({ name: '立即降温', score: 90, microStep: '5-4-3-2-1 感官锚定练习' });
+        }
+        if (h.norepinephrine > 70) {
+            advice.push({ name: '箱式呼吸', score: 85, microStep: '吸气4秒→屏息4秒→呼气4秒→屏息4秒' });
+        }
+        if (h.serotonin < 40) {
+            advice.push({ name: '光照暴露', score: 80, microStep: '到窗边或户外接受自然光10分钟' });
+        }
+        if (h.dopamine < 40) {
+            advice.push({ name: '小胜利', score: 75, microStep: '完成一个5分钟内的简单任务' });
+        }
+        if (h.ghrelin > 60) {
+            advice.push({ name: '蛋白质优先', score: 70, microStep: '先喝一杯水，然后吃高蛋白零食' });
+        }
+        if (h.orexin > 75) {
+            advice.push({ name: '固定作息', score: 65, microStep: '设定明天同一时间起床的闹钟' });
+        }
+        return advice.sort((a, b) => b.score - a.score);
+    }
+    
     // ---------- 渲染建议 ----------
     function renderAdvice(h) {
         const container = document.getElementById('advice-list');
@@ -2782,11 +3131,28 @@ const layerColors = {
             return;
         }
 
+        // 建议名称到图谱节点ID的映射（建议通常关联到调节机制节点）
+        const adviceNodeMap = {
+            '立即降温': 'ne_cold_exposure',
+            '箱式呼吸': 'ne_box_breathing',
+            '光照暴露': 'ht_sunlight',
+            '小胜利': 'da_reward',
+            '蛋白质优先': 'gh_protein_ghrelin',
+            '固定作息': 'cr_sleep_hygiene_cortisol',
+            '社交连接': 'ox_social_bonding_oxytocin',
+            '运动释放': 'ne_moderate_exercise',
+            '正念暂停': 'ne_mindfulness',
+            '冷水刺激': 'ne_cold_exposure_action'
+        };
+
         container.innerHTML = advice.slice(0, 5).map((a, i) => {
             const priorityCls = i === 0 ? 'high' : '';
             const microText = a.microStep || a.name;
+            const nodeId = adviceNodeMap[a.name] || '';
+            const clickable = nodeId ? 'clickable' : '';
+            const onclick = nodeId ? `onclick="focusGraphNode('${nodeId}')"` : '';
             return `
-                <li>
+                <li class="${clickable}" ${onclick} title="${nodeId ? '点击查看图谱节点' : ''}">
                     <div style="flex:1;">
                         <strong>${a.name}</strong>
                         <span class="micro-step">${microText}</span>
@@ -2844,6 +3210,9 @@ const layerColors = {
                 plugins: {
                     legend: { display: false }
                 },
+                plugins: {
+                    legend: { display: false }
+                },
                 scales: {
                     x: {
                         display: false,
@@ -2898,34 +3267,7 @@ const layerColors = {
     }
 </script>
 <script>
-// ===== 自动从 URL 参数加载健康数据（西奥多·手机自动导入） =====
-(function autoLoadFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const dataStr = params.get('data');
-    if (dataStr) {
-        try {
-            const data = JSON.parse(decodeURIComponent(dataStr));
-            if (typeof healthData !== 'undefined') {
-                Object.assign(healthData, data);
-                if (typeof computeHormones === 'function') {
-                    const newH = computeHormones(healthData, hormoneState);
-                    Object.assign(hormoneState, newH);
-                }
-                if (typeof hormoneHistory !== 'undefined') {
-                    hormoneHistory.push({ time: Date.now(), ...hormoneState });
-                }
-                if (typeof refreshUI === 'function') refreshUI();
-                if (typeof checkAndAssignTask === 'function') checkAndAssignTask(hormoneState);
-                console.log('✅ 已从 URL 自动加载健康数据');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                console.warn('healthData 未定义，无法加载数据');
-            }
-        } catch(e) {
-            console.warn('URL 数据解析失败', e);
-        }
-    }
-})();
+
 
 
     // ================================================================
@@ -2933,7 +3275,7 @@ const layerColors = {
     //  包含：主动任务下发、确认闭环、提醒升级、强制执行
     // ================================================================
 
-    let taskInterval = null;
+    
     let taskReminderCount = 0;
     let isTaskActive = false;
 
@@ -3054,7 +3396,6 @@ const layerColors = {
 
     // ---------- 强制锁屏模式 ----------
     function triggerForceLock() {
-        const overlay = document.getElementById('task-overlay');
         document.getElementById('task-title').textContent = '🛡️ 紧急保护模式 - 锁定';
         document.getElementById('task-desc').innerHTML = `
             你的生理数据达到了临界值。为了保护你，我将锁定屏幕，直到你完成安全练习。<br><br>
@@ -3187,44 +3528,10 @@ const layerColors = {
     document.head.appendChild(style);
 </script>
 <script>
-// ===== 补全缺失的 layerColors（修复图谱空白） =====
-const layerColors = {
-    molecular: '#4a7db5',
-    cellular: '#b57a4a',
-    circuit: '#6bb56b',
-    behavioral: '#b56b8a',
-    action: '#8a6bb5'
-};
 
 
-// ===== 自动从 URL 参数加载健康数据（西奥多·手机自动导入） =====
-(function autoLoadFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const dataStr = params.get('data');
-    if (dataStr) {
-        try {
-            const data = JSON.parse(decodeURIComponent(dataStr));
-            if (typeof healthData !== 'undefined') {
-                Object.assign(healthData, data);
-                if (typeof computeHormones === 'function') {
-                    const newH = computeHormones(healthData, hormoneState);
-                    Object.assign(hormoneState, newH);
-                }
-                if (typeof hormoneHistory !== 'undefined') {
-                    hormoneHistory.push({ time: Date.now(), ...hormoneState });
-                }
-                if (typeof refreshUI === 'function') refreshUI();
-                if (typeof checkAndAssignTask === 'function') checkAndAssignTask(hormoneState);
-                console.log('✅ 已从 URL 自动加载健康数据');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                console.warn('healthData 未定义，无法加载数据');
-            }
-        } catch(e) {
-            console.warn('URL 数据解析失败', e);
-        }
-    }
-})();
+
+
 
 
     // ================================================================
@@ -3433,4 +3740,4 @@ const layerColors = {
 
     // ---------- 页面加载完成后启动 ----------
     document.addEventListener('DOMContentLoaded', initApp);
-</script>
+</script></body></body></html>
