@@ -14657,326 +14657,362 @@ if (overlay) {
         // 图谱渲染引擎 (initGraph)
         // ============================================================
         function initGraph(nodesData, linksData) {
-            const container = document.getElementById('graph-container');
-            if (!container) {
-                console.warn('⚠️ 图谱容器不存在');
-                return;
-            }
+    const container = document.getElementById('graph-container');
+    if (!container) {
+        console.warn('⚠️ 图谱容器不存在');
+        return;
+    }
 
-            // 检查 D3 是否加载
-            if (typeof d3 === 'undefined') {
-                console.warn('⚠️ D3 未加载，图谱渲染跳过');
-                container.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:40px;">D3 未加载</div>';
-                return;
-            }
+    // 检查 D3 是否加载
+    if (typeof d3 === 'undefined') {
+        console.warn('⚠️ D3 未加载，图谱渲染跳过');
+        container.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:40px;">D3 未加载</div>';
+        return;
+    }
 
-            // 清空容器
-            container.innerHTML = '';
+    // 清空容器
+    container.innerHTML = '';
 
-            // 获取容器尺寸
-            const rect = container.getBoundingClientRect();
-            const width = rect.width || 600;
-            const height = rect.height || 340;
+    // 获取容器尺寸
+    const rect = container.getBoundingClientRect();
+    const width = rect.width || 600;
+    const height = rect.height || 340;
 
-            // 准备节点数据（限制数量，避免性能问题）
-            const displayNodes = nodesData.slice(0, 300);
-            const nodeIds = new Set(displayNodes.map(n => n.id));
-            const displayLinks = linksData.filter(l => {
-                const src = typeof l.source === 'string' ? l.source : l.source.id;
-                const tgt = typeof l.target === 'string' ? l.target : l.target.id;
-                return nodeIds.has(src) && nodeIds.has(tgt);
-            }).slice(0, 500);
+    // 准备节点数据（限制数量，避免性能问题）
+    const displayNodes = nodesData.slice(0, 300);
+    const nodeIds = new Set(displayNodes.map(n => n.id));
+    const displayLinks = linksData.filter(l => {
+        const src = typeof l.source === 'string' ? l.source : l.source.id;
+        const tgt = typeof l.target === 'string' ? l.target : l.target.id;
+        return nodeIds.has(src) && nodeIds.has(tgt);
+    }).slice(0, 500);
 
-            // 创建 SVG
-            const svg = d3.select(container)
-                .append('svg')
-                .attr('width', width)
-                .attr('height', height)
-                .style('background', 'transparent');
+    // 创建 SVG
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .style('background', 'transparent');
 
-            // 定义颜色映射
-            const colorMap = {
-                'dopamine': '#ff6b6b',
-                'norepinephrine': '#45b7d1',
-                'serotonin': '#4ecdc4',
-                'acetylcholine': '#96ceb4',
-                'cortisol': '#5f27cd',
-                'orexin': '#54a0ff',
-                'opioid': '#ff9ff3',
-                'cannabinoid': '#feca57',
-                'oxytocin': '#ff9f43',
-                'vasopressin': '#ee5a24',
-                'sex_hormones': '#00d2d3',
-                'ghrelin': '#10ac84',
-                'leptin': '#c8d6e5'
-            };
+    // 定义颜色映射
+    const colorMap = {
+        'dopamine': '#ff6b6b',
+        'norepinephrine': '#45b7d1',
+        'serotonin': '#4ecdc4',
+        'acetylcholine': '#96ceb4',
+        'cortisol': '#5f27cd',
+        'orexin': '#54a0ff',
+        'opioid': '#ff9ff3',
+        'cannabinoid': '#feca57',
+        'oxytocin': '#ff9f43',
+        'vasopressin': '#ee5a24',
+        'sex_hormones': '#00d2d3',
+        'ghrelin': '#10ac84',
+        'leptin': '#c8d6e5'
+    };
 
-            // 创建力导向图
-            const simulation = d3.forceSimulation(displayNodes)
-                .force('link', d3.forceLink(displayLinks).id(d => d.id).distance(80))
-                .force('charge', d3.forceManyBody().strength(-200))
-                .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collide', d3.forceCollide().radius(15));
+    // 创建力导向图
+    const simulation = d3.forceSimulation(displayNodes)
+        .force('link', d3.forceLink(displayLinks).id(d => d.id).distance(80))
+        .force('charge', d3.forceManyBody().strength(-200))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collide', d3.forceCollide().radius(15));
 
-            // 绘制连接线
-            const link = svg.append('g')
-                .selectAll('line')
-                .data(displayLinks)
-                .enter()
-                .append('line')
-                .attr('stroke', 'rgba(255,255,255,0.15)')
-                .attr('stroke-width', 1);
+    // 绘制连接线
+    const link = svg.append('g')
+        .selectAll('line')
+        .data(displayLinks)
+        .enter()
+        .append('line')
+        .attr('stroke', 'rgba(255,255,255,0.15)')
+        .attr('stroke-width', 1);
 
-            // 绘制节点
-            const node = svg.append('g')
-                .selectAll('g')
-                .data(displayNodes)
-                .enter()
-                .append('g')
-                .attr('class', 'node')
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended)
-                );
+    // 绘制节点
+    const node = svg.append('g')
+        .selectAll('g')
+        .data(displayNodes)
+        .enter()
+        .append('g')
+        .attr('class', 'node')
+        .call(d3.drag()
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended)
+        );
 
-            // 节点圆
-            node.append('circle')
-                .attr('r', 8)
-                .attr('fill', d => colorMap[d.hormone] || '#888')
-                .attr('stroke', 'rgba(255,255,255,0.3)')
-                .attr('stroke-width', 1.5)
-                .style('cursor', 'pointer');
+    // 节点圆
+    node.append('circle')
+        .attr('r', 8)
+        .attr('fill', d => colorMap[d.hormone] || '#888')
+        .attr('stroke', 'rgba(255,255,255,0.3)')
+        .attr('stroke-width', 1.5)
+        .style('cursor', 'pointer');
 
-            // 节点标签
-            node.append('text')
-                .attr('dx', 0)
-                .attr('dy', -12)
-                .attr('text-anchor', 'middle')
-                .style('font-size', '7px')
-                .style('fill', 'rgba(255,255,255,0.7)')
-                .style('pointer-events', 'none')
-                .text(d => d.name || d.id.split('_').slice(1).join('_'));
+    // 节点标签
+    node.append('text')
+        .attr('dx', 0)
+        .attr('dy', -12)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '7px')
+        .style('fill', 'rgba(255,255,255,0.7)')
+        .style('pointer-events', 'none')
+        .text(d => d.name || d.id.split('_').slice(1).join('_'));
 
-            // 节点点击事件
-            node.on('click', function (event, d) {
-                console.log('📍 点击节点:', d.id, d.name);
-                if (window._bridgeToUI && window._bridgeToUI.focusGraphNode) {
-                    window._bridgeToUI.focusGraphNode(d.id);
-                }
-                // 高亮节点
-                d3.selectAll('.node circle').attr('stroke', 'rgba(255,255,255,0.3)').attr('stroke-width', 1.5);
-                d3.select(this).select('circle').attr('stroke', '#ffd93d').attr('stroke-width', 3);
-            });
-
-            // 鼠标悬停提示
-            node.on('mouseenter', function (event, d) {
-                const tooltip = document.getElementById('tooltip');
-                if (tooltip) {
-                    tooltip.innerHTML = `<strong>${d.name || d.id}</strong><br>${d.hormone || ''} · ${d.layer || ''}`;
-                    tooltip.style.left = (event.pageX + 10) + 'px';
-                    tooltip.style.top = (event.pageY - 10) + 'px';
-                    tooltip.classList.add('visible');
-                }
-            });
-
-            node.on('mouseleave', function () {
-                const tooltip = document.getElementById('tooltip');
-                if (tooltip) tooltip.classList.remove('visible');
-            });
-
-            // 力导向图更新
-            simulation.on('tick', () => {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-
-                node
-                    .attr('transform', d => `translate(${d.x},${d.y})`);
-            });
-
-            // 拖拽函数
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            }
-
-            // 保存仿真引用
-            window.graphSimulation = simulation;
-
-            // 窗口自适应
-            const resizeObserver = new ResizeObserver(() => {
-                const newRect = container.getBoundingClientRect();
-                svg.attr('width', newRect.width).attr('height', newRect.height);
-                simulation.force('center', d3.forceCenter(newRect.width / 2, newRect.height / 2));
-                simulation.alpha(0.3).restart();
-            });
-            resizeObserver.observe(container);
-            window._graphResizeObserver = resizeObserver;
-
-            console.log(`✅ 图谱渲染完成: ${displayNodes.length} 个节点, ${displayLinks.length} 条连接`);
+    // ======== 修复节点点击事件 ========
+    node.on('click', function (event, d) {
+        console.log('📍 点击节点:', d.id, d.name);
+        // 调用全局聚焦函数（已在 startSystem 中定义）
+        if (window.focusGraphNode) {
+            window.focusGraphNode(d.id);
+        } else {
+            console.warn('⚠️ focusGraphNode 未定义');
         }
+        // 高亮节点
+        d3.selectAll('.node circle').attr('stroke', 'rgba(255,255,255,0.3)').attr('stroke-width', 1.5);
+        d3.select(this).select('circle').attr('stroke', '#ffd93d').attr('stroke-width', 3);
+    });
+
+    // 鼠标悬停提示
+    node.on('mouseenter', function (event, d) {
+        const tooltip = document.getElementById('tooltip');
+        if (tooltip) {
+            tooltip.innerHTML = `<strong>${d.name || d.id}</strong><br>${d.hormone || ''} · ${d.layer || ''}`;
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+            tooltip.classList.add('visible');
+        }
+    });
+
+    node.on('mouseleave', function () {
+        const tooltip = document.getElementById('tooltip');
+        if (tooltip) tooltip.classList.remove('visible');
+    });
+
+    // 力导向图更新
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+
+        node
+            .attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+
+    // 拖拽函数
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+    // 保存仿真引用
+    window.graphSimulation = simulation;
+
+    // 窗口自适应
+    const resizeObserver = new ResizeObserver(() => {
+        const newRect = container.getBoundingClientRect();
+        svg.attr('width', newRect.width).attr('height', newRect.height);
+        simulation.force('center', d3.forceCenter(newRect.width / 2, newRect.height / 2));
+        simulation.alpha(0.3).restart();
+    });
+    resizeObserver.observe(container);
+    window._graphResizeObserver = resizeObserver;
+
+    console.log(`✅ 图谱渲染完成: ${displayNodes.length} 个节点, ${displayLinks.length} 条连接`);
+}
         // 等待所有类定义加载完成后启动系统
         async function startSystem() {
-            console.log('🚀 西奥多系统启动中...');
+    console.log('🚀 西奥多系统启动中...');
 
-            // 检查数据完整性
-            if (typeof allNodes === 'undefined' || allNodes.length < 100) {
-                console.error('❌ 节点数据不足');
-                document.getElementById('top-status').textContent = '❌ 数据缺失';
-                return;
-            }
-            if (typeof allLinks === 'undefined' || allLinks.length < 100) {
-                console.error('❌ 连接数据不足');
-                document.getElementById('top-status').textContent = '❌ 连接缺失';
-                return;
-            }
-            if (typeof NeuroSystem === 'undefined') {
-                console.error('❌ NeuroSystem未定义');
-                document.getElementById('top-status').textContent = '❌ 类缺失';
-                return;
-            }
-
-            try {
-                // 1. 创建系统实例
-                const system = new NeuroSystem();
-                window.system = system;
-
-                // 2. 初始化
-                system.initialize(allNodes, allLinks, {
-                    maxNodes: 600,
-                    defaultPreset: 'ELS-Moderate',
-                    applyPresetToValues: true,
-                    socThreshold: 0.75,
-                    stabilityWindow: 60,
-                    runSelfChecks: true,
-                    dt: 0.1
-                });
-    // ⬇️ 加这一段
-if (typeof initBridges === 'function' && !window._bridgeToUI) {
-    const bridges = initBridges(system);
-    window._bridgeToUI = bridges.bridgeToUI;
-    window._bridgeFromUI = bridges.bridgeFromUI;
-    console.log('✅ 桥接器已初始化');
-}
-    
-    // 启动 UI 更新
-    if (window._bridgeToUI?.start) {
-        window._bridgeToUI.start(1000);
+    // 检查数据完整性
+    if (typeof allNodes === 'undefined' || allNodes.length < 100) {
+        console.error('❌ 节点数据不足');
+        document.getElementById('top-status').textContent = '❌ 数据缺失';
+        return;
     }
-                // ============================================================
-                // 🧪 科学模式：放大连接权重，让网络真正"活"起来
-                // ============================================================
-                console.log('🔬 正在激活科学模式...');
-
-                const nodes = system.stateManager.getAllNodes();
-                const weightMatrix = system.weightMatrix;
-                const scaleFactor = 10;
-
-                let amplifiedCount = 0;
-                for (const src of nodes) {
-                    for (const tgt of nodes) {
-                        if (src.id === tgt.id) continue;
-                        const oldWeight = weightMatrix.getWeight(src.id, tgt.id);
-                        if (oldWeight > 0.001) {
-                            const newWeight = Math.min(0.95, oldWeight * scaleFactor);
-                            weightMatrix.W[src.id][tgt.id] = newWeight;
-                            weightMatrix.W[tgt.id][src.id] = newWeight;
-                            amplifiedCount++;
-                        }
-                    }
-                }
-
-                weightMatrix.nonZeroCount = 0;
-                for (const src of nodes) {
-                    for (const tgt of nodes) {
-                        if (weightMatrix.W[src.id]?.[tgt.id] > 0.001) {
-                            weightMatrix.nonZeroCount++;
-                        }
-                    }
-                }
-
-                console.log(`✅ 科学模式激活: ${amplifiedCount} 条连接已放大 ${scaleFactor} 倍`);
-                console.log(`📊 非零连接数: ${weightMatrix.nonZeroCount}`);
-
-                system.networkEngine.weightMatrix = weightMatrix;
-
-                // 🔥 热身运行
-                console.log('🔥 开始热身 (500步)...');
-                for (let i = 0; i < 30; i++) {
-                    system.step(0.1);
-                }
-                console.log('✅ 热身完成，节点值已活跃');
-                console.log('✅ 西奥多系统启动完成！（科学模式）');
-
-                // 挂载基础设施（第一阶段）
-                const infra = initInfrastructure(system);
-                // 恢复持久化数据
-               if (typeof window.restorePersistedData === 'function') {
-    window.restorePersistedData(system);
-} else {
-                    console.warn('⚠️ restorePersistedData 未定义，跳过数据恢复');
-                }
-                if (infra) {
-                    console.log('✅ 基础设施已激活');
-                }
-
-                // 挂载第二、三、四阶段页面
-                if (typeof initPages === 'function') {
-                    initPages(system);
-                }
-
-                // 🟢 补上这一行：启动 UI 自动更新（让仪表盘动起来）
-                if (window._bridgeToUI?.start) {
-                    window._bridgeToUI.start(1000);
-                    console.log('✅ UI 自动更新已启动');
-                }
-
-                console.log('💡 可用命令: window.system, window._bridgeToUI, window._bridgeFromUI');
-            } catch (e) {
-                console.error('❌ 启动失败:', e);
-                document.getElementById('top-status').textContent = '❌ 启动失败';
-                alert('系统启动失败，请检查控制台错误信息。\n' + e.message);
-            }
-            // 在 startSystem 末尾添加
-// 找到 "更新数据" 按钮
-document.getElementById('btn-simulate')?.addEventListener('click', function() {
-    if (window._bridgeToUI) {
-        window._bridgeToUI.update();
-        this.textContent = '🔄 已更新';
-        setTimeout(() => { this.textContent = '🔄 更新数据'; }, 1000);
-    } else {
-        console.warn('⚠️ UI 桥接器未就绪');
+    if (typeof allLinks === 'undefined' || allLinks.length < 100) {
+        console.error('❌ 连接数据不足');
+        document.getElementById('top-status').textContent = '❌ 连接缺失';
+        return;
     }
-});
+    if (typeof NeuroSystem === 'undefined') {
+        console.error('❌ NeuroSystem未定义');
+        document.getElementById('top-status').textContent = '❌ 类缺失';
+        return;
+    }
 
-// "自动" 按钮
-document.getElementById('btn-auto-toggle')?.addEventListener('click', function() {
-    if (window._bridgeToUI) {
-        if (this.textContent.includes('▶')) {
+    try {
+        // 1. 创建系统实例
+        const system = new NeuroSystem();
+        window.system = system;
+
+        // 2. 初始化
+        system.initialize(allNodes, allLinks, {
+            maxNodes: 600,
+            defaultPreset: 'ELS-Moderate',
+            applyPresetToValues: true,
+            socThreshold: 0.75,
+            stabilityWindow: 60,
+            runSelfChecks: true,
+            dt: 0.1
+        });
+
+        // 初始化桥接器
+        if (typeof initBridges === 'function' && !window._bridgeToUI) {
+            const bridges = initBridges(system);
+            window._bridgeToUI = bridges.bridgeToUI;
+            window._bridgeFromUI = bridges.bridgeFromUI;
+            console.log('✅ 桥接器已初始化');
+        }
+
+        // 启动 UI 更新
+        if (window._bridgeToUI?.start) {
             window._bridgeToUI.start(1000);
-            this.textContent = '⏸ 暂停 (30s)';
+        }
+
+        // ============================================================
+        // 🧪 科学模式：放大连接权重
+        // ============================================================
+        console.log('🔬 正在激活科学模式...');
+
+        const nodes = system.stateManager.getAllNodes();
+        const weightMatrix = system.weightMatrix;
+        const scaleFactor = 10;
+
+        let amplifiedCount = 0;
+        for (const src of nodes) {
+            for (const tgt of nodes) {
+                if (src.id === tgt.id) continue;
+                const oldWeight = weightMatrix.getWeight(src.id, tgt.id);
+                if (oldWeight > 0.001) {
+                    const newWeight = Math.min(0.95, oldWeight * scaleFactor);
+                    weightMatrix.W[src.id][tgt.id] = newWeight;
+                    weightMatrix.W[tgt.id][src.id] = newWeight;
+                    amplifiedCount++;
+                }
+            }
+        }
+
+        weightMatrix.nonZeroCount = 0;
+        for (const src of nodes) {
+            for (const tgt of nodes) {
+                if (weightMatrix.W[src.id]?.[tgt.id] > 0.001) {
+                    weightMatrix.nonZeroCount++;
+                }
+            }
+        }
+
+        console.log(`✅ 科学模式激活: ${amplifiedCount} 条连接已放大 ${scaleFactor} 倍`);
+        console.log(`📊 非零连接数: ${weightMatrix.nonZeroCount}`);
+
+        system.networkEngine.weightMatrix = weightMatrix;
+
+        // 🔥 热身运行
+        console.log('🔥 开始热身 (500步)...');
+        for (let i = 0; i < 30; i++) {
+            system.step(0.1);
+        }
+        console.log('✅ 热身完成，节点值已活跃');
+        console.log('✅ 西奥多系统启动完成！（科学模式）');
+
+        // 挂载基础设施（第一阶段）
+        const infra = initInfrastructure(system);
+        // 恢复持久化数据
+        if (typeof window.restorePersistedData === 'function') {
+            window.restorePersistedData(system);
         } else {
-            window._bridgeToUI.stop();
-            this.textContent = '▶ 自动 (30s)';
+            console.warn('⚠️ restorePersistedData 未定义，跳过数据恢复');
         }
+        if (infra) {
+            console.log('✅ 基础设施已激活');
+        }
+
+        // 挂载第二、三、四阶段页面
+        if (typeof initPages === 'function') {
+            initPages(system);
+        }
+
+        // 启动 UI 自动更新（让仪表盘动起来）
+        if (window._bridgeToUI?.start) {
+            window._bridgeToUI.start(1000);
+            console.log('✅ UI 自动更新已启动');
+        }
+
+        // ========== 新增：渲染主页图谱 ==========
+        if (typeof initGraph === 'function') {
+            initGraph(allNodes, allLinks);
+            console.log('✅ 主页图谱已渲染');
+        } else {
+            console.warn('⚠️ initGraph 未定义，无法渲染主页图谱');
+        }
+
+        // ========== 定义聚焦图谱节点函数（供点击事件调用） ==========
+        window.focusGraphNode = function(nodeId) {
+            console.log('📍 聚焦节点:', nodeId);
+            const container = document.getElementById('graph-container');
+            if (!container) return;
+            const svg = container.querySelector('svg');
+            if (!svg) return;
+            const circles = svg.querySelectorAll('circle');
+            circles.forEach(c => {
+                const parent = c.parentElement;
+                if (parent && parent.__data__ && parent.__data__.id === nodeId) {
+                    c.style.stroke = '#ffd93d';
+                    c.style.strokeWidth = '3px';
+                } else {
+                    c.style.stroke = '';
+                    c.style.strokeWidth = '';
+                }
+            });
+        };
+
+        // 绑定“更新数据”按钮
+        document.getElementById('btn-simulate')?.addEventListener('click', function() {
+            if (window._bridgeToUI) {
+                window._bridgeToUI.update();
+                this.textContent = '🔄 已更新';
+                setTimeout(() => { this.textContent = '🔄 更新数据'; }, 1000);
+            } else {
+                console.warn('⚠️ UI 桥接器未就绪');
+            }
+        });
+
+        // 绑定“自动”按钮
+        document.getElementById('btn-auto-toggle')?.addEventListener('click', function() {
+            if (window._bridgeToUI) {
+                if (this.textContent.includes('▶')) {
+                    window._bridgeToUI.start(1000);
+                    this.textContent = '⏸ 暂停 (30s)';
+                } else {
+                    window._bridgeToUI.stop();
+                    this.textContent = '▶ 自动 (30s)';
+                }
+            }
+        });
+
+        // 强制显示仪表盘（防止被隐藏）
+        document.getElementById('app').style.display = 'block';
+
+        console.log('💡 可用命令: window.system, window._bridgeToUI, window._bridgeFromUI');
+    } catch (e) {
+        console.error('❌ 启动失败:', e);
+        document.getElementById('top-status').textContent = '❌ 启动失败';
+        alert('系统启动失败，请检查控制台错误信息。\n' + e.message);
     }
-});
-        }
+}
 
         // ===== 页面加载完成后启动 =====
         document.addEventListener('DOMContentLoaded', () => {
@@ -19894,7 +19930,26 @@ if (typeof showDetailPanel === 'undefined') {
     };
     window.showNodeDetail = window.showDetailPanel;
 } else {
+// 确保 showDetailPanel 已定义，否则提供备用函数
+if (typeof showDetailPanel === 'function') {
     window.showNodeDetail = showDetailPanel;
+} else {
+    window.showNodeDetail = function(nodeId) {
+        console.warn('⚠️ showDetailPanel 未定义，使用备用函数');
+        const adapter = window.__theodore?.adapter;
+        if (adapter) {
+            const node = adapter.getNode(nodeId);
+            if (node) {
+                alert(`节点: ${node.name}\n激素: ${node.hormone}\n值: ${node.value}`);
+            } else {
+                alert(`节点 ${nodeId} 未找到`);
+            }
+        } else {
+            alert('系统未就绪');
+        }
+    };
+}
+window.showNodeDetail = window.showNodeDetail;
 }
         })();
 // ============================================================
@@ -22113,6 +22168,7 @@ function initFinal() {
             })();
      
 })();
+
 </script>
 </body>
 
