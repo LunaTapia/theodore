@@ -30,7 +30,6 @@
             --safe-bottom: env(safe-area-inset-bottom, 12px);
             --header-h: 54px;
             --bottom-nav-h: 62px;
-            --input-area-h: 130px;
             --transition: 0.25s cubic-bezier(0.25, 0, 0.25, 1);
         }
 
@@ -320,14 +319,8 @@
             animation: msgIn 0.2s ease-out;
         }
         @keyframes msgIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .msg-row.me {
             align-self: flex-end;
@@ -981,11 +974,20 @@
         <button class="attach-popup-item" id="btnAttachCancel">取消</button>
     </div>
 
+    <!-- 消息长按菜单 -->
     <div class="context-menu" id="contextMenu">
         <button class="context-menu-item" data-action="reply">↩ 回复</button>
         <button class="context-menu-item" data-action="edit">✏ 编辑</button>
         <button class="context-menu-item danger" data-action="delete">🗑 删除</button>
     </div>
+
+    <!-- 聊天列表长按菜单 -->
+    <div class="context-menu" id="chatListContextMenu">
+        <button class="context-menu-item" data-action="rename-chat">✏️ 重命名</button>
+        <button class="context-menu-item" data-action="pin-chat">📌 置顶</button>
+        <button class="context-menu-item danger" data-action="delete-chat">🗑 删除聊天</button>
+    </div>
+
     <div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
     <div class="toast" id="toast"></div>
 
@@ -1035,7 +1037,6 @@
 
             function avBg(e) { return e ? e.color || '#666' : '#666'; }
 
-            // IndexedDB 存储层 (iOS Safari 更可靠)
             function openIDB() {
                 return new Promise((resolve, reject) => {
                     const req = indexedDB.open(IDB_NAME, IDB_VERSION);
@@ -1078,27 +1079,20 @@
                         tx.onerror = () => { db.close();
                             reject(tx.error); };
                     });
-                } catch (e) {
-                    // IndexedDB 不可用时静默失败，localStorage 作为 fallback
-                }
+                } catch (e) {}
             }
 
-            // 同步保存到 localStorage，异步保存到 IndexedDB
             function save() {
                 appData._lastModified = Date.now();
                 try {
                     const json = JSON.stringify(appData);
-                    // 检查数据大小，localStorage 通常限制 5-10MB
                     if (json.length > 4 * 1024 * 1024) {
-                        console.warn('数据较大(' + (json.length / 1024 / 1024).toFixed(1) +
-                            'MB)，localStorage 可能存储失败，正在尝试...');
+                        console.warn('数据较大，localStorage 可能存储失败');
                     }
                     localStorage.setItem(STORAGE_KEY, json);
                 } catch (e) {
-                    console.error('localStorage 保存失败:', e);
                     showToast('⚠ 存储空间不足，请清理旧数据或导出备份');
                 }
-                // 异步写入 IndexedDB（不阻塞 UI）
                 idbSet(appData).catch(() => {});
             }
 
@@ -1115,34 +1109,26 @@
                             return true;
                         }
                     }
-                } catch (e) {
-                    console.error('localStorage 读取失败:', e);
-                }
+                } catch (e) {}
                 return false;
             }
 
             async function loadAsync() {
-                // 优先从 IndexedDB 加载（iOS 上更可靠）
                 try {
                     const idbData = await idbGet();
                     if (idbData && idbData.profile) {
                         const lsData = loadSync() ? appData : null;
-                        // 比较时间戳，使用更新的数据
                         const idbTime = idbData._lastModified || 0;
                         const lsTime = lsData ? (lsData._lastModified || 0) : 0;
                         if (idbTime >= lsTime) {
                             appData = idbData;
                             if (!appData.chatOrder) appData.chatOrder = [];
                             if (!appData.nextId) appData.nextId = 1;
-                            // 同步到 localStorage
                             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {}
                             return true;
                         }
                     }
-                } catch (e) {
-                    // IndexedDB 不可用，使用 localStorage
-                }
-                // fallback 到 localStorage
+                } catch (e) {}
                 if (loadSync()) return true;
                 return false;
             }
@@ -1152,7 +1138,8 @@
                 currentSenderId = 'me',
                 replyTarget = null,
                 editingMsgId = null,
-                contextMenuTarget = null;
+                contextMenuTarget = null,
+                chatListContextTarget = null;
             const $ = s => document.querySelector(s);
             const chatListView = $('#chatListView'),
                 chatDetailView = $('#chatDetailView'),
@@ -1168,6 +1155,7 @@
                 contactsList = $('#contactsList');
             const profileContent = $('#profileContent'),
                 contextMenu = $('#contextMenu'),
+                chatListContextMenu = $('#chatListContextMenu'),
                 attachPopup = $('#attachPopup');
             const attachOverlay = $('#attachOverlay'),
                 modalOverlay = $('#modalOverlay'),
@@ -1210,10 +1198,26 @@
                 contextMenu.style.left = Math.min(x, innerWidth - 160) + 'px';
                 contextMenu.style.top = Math.min(y, innerHeight - 140) + 'px';
                 contextMenu.classList.add('show');
+                chatListContextMenu.classList.remove('show');
             }
 
             function hideCtx() { contextMenu.classList.remove('show'); }
-            document.addEventListener('click', e => { if (!contextMenu.contains(e.target)) hideCtx(); });
+
+            function showChatListCtx(x, y, chatId) {
+                chatListContextTarget = chatId;
+                chatListContextMenu.style.left = Math.min(x, innerWidth - 160) + 'px';
+                chatListContextMenu.style.top = Math.min(y, innerHeight - 140) + 'px';
+                chatListContextMenu.classList.add('show');
+                contextMenu.classList.remove('show');
+            }
+
+            function hideChatListCtx() { chatListContextMenu.classList.remove('show'); }
+
+            document.addEventListener('click', e => {
+                if (!contextMenu.contains(e.target)) hideCtx();
+                if (!chatListContextMenu.contains(e.target)) hideChatListCtx();
+            });
+
             contextMenu.addEventListener('click', e => {
                 const act = e.target.closest('.context-menu-item')?.dataset.action;
                 if (!act || !contextMenuTarget) return;
@@ -1223,6 +1227,72 @@
                 else if (act === 'edit') editMsg(chatId, msgId);
                 else if (act === 'delete') delMsg(chatId, msgId);
             });
+
+            chatListContextMenu.addEventListener('click', e => {
+                const act = e.target.closest('.context-menu-item')?.dataset.action;
+                if (!act || !chatListContextTarget) return;
+                const chatId = chatListContextTarget;
+                hideChatListCtx();
+                if (act === 'rename-chat') renameChat(chatId);
+                else if (act === 'pin-chat') pinChat(chatId);
+                else if (act === 'delete-chat') deleteChat(chatId);
+            });
+
+            function renameChat(chatId) {
+                const chat = appData.chats.find(c => c.id === chatId);
+                if (!chat) return;
+                showModal(`
+                    <h3>重命名聊天</h3>
+                    <input class="profile-input" id="modalRenameInput" value="${escapeHtml(chat.name)}" placeholder="新名称">
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline" id="modalCancelRename">取消</button>
+                        <button class="btn btn-primary" id="modalConfirmRename">确定</button>
+                    </div>
+                `);
+                $('#modalCancelRename').addEventListener('click', hideModal);
+                $('#modalConfirmRename').addEventListener('click', () => {
+                    const newName = document.getElementById('modalRenameInput')?.value.trim();
+                    if (newName) {
+                        chat.name = newName;
+                        save();
+                        renderList();
+                        if (currentChatId === chatId) {
+                            document.getElementById('chatDetailTitle').textContent = newName;
+                        }
+                        hideModal();
+                        showToast('已重命名');
+                    }
+                });
+            }
+
+            function pinChat(chatId) {
+                const idx = appData.chatOrder.indexOf(chatId);
+                if (idx > 0) {
+                    appData.chatOrder.splice(idx, 1);
+                    appData.chatOrder.unshift(chatId);
+                } else if (idx === -1) {
+                    appData.chatOrder.unshift(chatId);
+                }
+                save();
+                renderList();
+                showToast('已置顶');
+            }
+
+            function deleteChat(chatId) {
+                const chat = appData.chats.find(c => c.id === chatId);
+                if (!chat) return;
+                if (confirm(`确定删除聊天“${chat.name}”吗？此操作不可恢复。`)) {
+                    appData.chats = appData.chats.filter(c => c.id !== chatId);
+                    appData.chatOrder = appData.chatOrder.filter(id => id !== chatId);
+                    if (currentChatId === chatId) {
+                        currentChatId = null;
+                        switchList();
+                    }
+                    save();
+                    renderList();
+                    showToast('聊天已删除');
+                }
+            }
 
             function compressImage(file, mw = 800, mh = 800, q = 0.7) {
                 return new Promise((ok, err) => {
@@ -1242,11 +1312,7 @@
                             c.getContext('2d').drawImage(img, 0, 0, w, h);
                             ok(c.toDataURL('image/jpeg', q));
                         };
-                        img.onerror = () => {
-                            // 压缩失败时回退到原始 dataURL
-                            console.warn('图片压缩失败，使用原始数据');
-                            ok(e.target.result);
-                        };
+                        img.onerror = () => ok(e.target.result);
                         img.src = e.target.result;
                     };
                     r.onerror = err;
@@ -1280,21 +1346,15 @@
                         } else if (f.type.startsWith('video/') || f.type.startsWith('audio/')) {
                             dataUrl = await readFile(f);
                             content = dataUrl;
-                            // 大文件警告
-                            if (dataUrl.length > 2 * 1024 * 1024) {
-                                showToast('⚠ 文件较大，可能影响存储');
-                            }
+                            if (dataUrl.length > 2 * 1024 * 1024) showToast('⚠ 文件较大，可能影响存储');
                         } else {
                             dataUrl = await readFile(f);
                             content = dataUrl;
-                            if (dataUrl.length > 2 * 1024 * 1024) {
-                                showToast('⚠ 文件较大，可能影响存储');
-                            }
+                            if (dataUrl.length > 2 * 1024 * 1024) showToast('⚠ 文件较大，可能影响存储');
                         }
                         addMsg(currentChatId, currentSenderId, content, type, f.name);
                         successCount++;
                     } catch (e) {
-                        console.error('文件处理失败:', e);
                         showToast('处理失败: ' + (f.name || '未知文件'));
                     }
                 }
@@ -1445,24 +1505,37 @@
                 }).join('') : '<div style="text-align:center;padding:60px;color:var(--text-tertiary);">暂无聊天</div>';
 
                 chatListScroll.querySelectorAll('.chat-list-item').forEach(item => {
-                    item.addEventListener('click', e => { if (!e.target.closest('.drag-handle')) openChat(item
-                            .dataset.chatId); });
+                    const chatId = item.dataset.chatId;
+                    item.addEventListener('click', e => { if (!e.target.closest('.drag-handle')) openChat(
+                            chatId); });
                     item.addEventListener('dragstart', ds);
                     item.addEventListener('dragover', dv);
                     item.addEventListener('dragleave', dl);
                     item.addEventListener('drop', dp);
                     item.addEventListener('dragend', de);
-                    let t;
-                    item.addEventListener('touchstart', e => { t = setTimeout(() => { item.classList.add(
-                                'dragging'); }, 500); }, { passive: true });
-                    item.addEventListener('touchend', () => clearTimeout(t));
-                    item.addEventListener('touchmove', () => clearTimeout(t));
+
+                    let longPressTimer;
+                    const clearLongPress = () => { if (longPressTimer) { clearTimeout(longPressTimer);
+                            longPressTimer = null; } };
+                    item.addEventListener('touchstart', e => {
+                        if (e.target.closest('.drag-handle')) return;
+                        const touch = e.touches[0];
+                        longPressTimer = setTimeout(() => {
+                            showChatListCtx(touch.clientX, touch.clientY, chatId);
+                            clearLongPress();
+                        }, 600);
+                    }, { passive: true });
+                    item.addEventListener('touchend', clearLongPress);
+                    item.addEventListener('touchmove', clearLongPress);
+                    item.addEventListener('touchcancel', clearLongPress);
                 });
+
                 let dragIdx = null;
 
                 function ds(e) { dragIdx = +this.dataset.index;
                     this.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move'; }
+                    e.dataTransfer.effectAllowed = 'move';
+                    hideChatListCtx(); }
 
                 function dv(e) { e.preventDefault();
                     this.classList.add('drag-over'); }
@@ -1487,7 +1560,7 @@
                 const chat = appData.chats.find(c => c.id === chatId);
                 if (!chat) return;
                 currentChatId = chatId;
-                chatDetailTitle.textContent = chat.name;
+                document.getElementById('chatDetailTitle').textContent = chat.name;
                 chatDetailView.classList.add('active');
                 chatListView.style.display = 'none';
                 searchView.classList.remove('active');
@@ -1513,7 +1586,6 @@
                         `<img src="${msg.content}" class="msg-image" loading="lazy">`;
                     else bubble =
                         `<a class="msg-file">📎 ${escapeHtml((msg.fileName||'文件').substring(0,30))}</a>`;
-                    // 群聊中不再显示发送者名字（用户要求去掉）
                     return `<div class="msg-row ${isMe?'me':'other'}" data-msg-id="${msg.id}" data-chat-id="${chatId}">
                         ${!isMe?`<div class="msg-avatar" style="background:${avBg(sender)};">${avHtml(sender)}</div>`:''}
                         <div class="msg-bubble-wrap">
@@ -1648,7 +1720,8 @@
                 updateReply();
                 $('#btnSend').textContent = '↑';
                 renderDetail(id);
-                switchDetail(); }
+                switchDetail();
+                hideChatListCtx(); }
 
             function switchDetail() { chatListView.style.display = 'none';
                 searchView.classList.remove('active');
@@ -1707,7 +1780,6 @@
                                     block: 'center' }); }, 300); })); });
 
             function exportHistory() {
-                // 导出完整的 appData（包含所有消息类型、文件等）
                 const exportData = {
                     profile: appData.profile,
                     contacts: appData.contacts,
@@ -1769,7 +1841,6 @@
                     `);
                     $('#modalCancelImport').addEventListener('click', hideModal);
                     $('#modalConfirmImport').addEventListener('click', () => {
-                        // 合并策略：替换 profile，合并联系人（去重），替换聊天
                         if (importData.profile) appData.profile = importData.profile;
                         if (importData.contacts) {
                             const existingIds = new Set(appData.contacts.map(c => c.id));
@@ -1795,7 +1866,6 @@
                         showToast('✅ 数据已恢复！');
                     });
                 } catch (e) {
-                    console.error('导入失败:', e);
                     showToast('❌ 文件解析失败，请检查格式');
                 }
                 this.value = '';
@@ -1831,6 +1901,7 @@
                     searchView.classList.remove('active');
                     renderProfile(); }
                 hideCtx();
+                hideChatListCtx();
                 hideAttach();
                 hideModal();
             }
@@ -1841,24 +1912,17 @@
             function escapeHtml(s) { const d = document.createElement('div');
                 d.textContent = s || ''; return d.innerHTML; }
 
-            // 初始化：异步加载数据后渲染
             async function initApp() {
                 const loaded = await loadAsync();
-                if (loaded) {
-                    console.log('✅ 数据已从存储中恢复 (IndexedDB/localStorage)');
-                } else {
-                    console.log('🆕 首次使用，使用默认数据');
-                    save(); // 初始化默认数据并保存
-                }
+                if (loaded) console.log('✅ 数据已恢复');
+                else { console.log('🆕 首次使用'); save(); }
                 renderList();
                 renderContacts();
                 switchTab('chat');
-                // 页面关闭前确保保存
                 window.addEventListener('beforeunload', () => {
                     appData._lastModified = Date.now();
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {}
                 });
-                // 定期自动保存（每30秒检查一次）
                 setInterval(() => {
                     if (appData._lastModified) {
                         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {}
@@ -1868,7 +1932,6 @@
 
             initApp().catch(e => {
                 console.error('初始化失败:', e);
-                // 紧急fallback：尝试同步加载
                 loadSync();
                 renderList();
                 renderContacts();
