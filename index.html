@@ -1886,7 +1886,7 @@ async function handleMsgAction(a,m){
   if(a==='del'){deleteMsg(m.id);return;}
   if(a==='copy'){const t=plainText(m);navigator.clipboard&&navigator.clipboard.writeText(t);showToast('已复制');return;}
   if(a==='inner'){ if(m.innerThought){openInline('inner',m.id);} else {openInline('inner',m.id);} return;}
-  if(a==='ts'){ if(m.timestampText){editTs(m);} else {m.timestampText=fmtNow();await put('messages',m);keepScroll(()=>renderMessages());} return;}
+  if(a==='ts'){ if(m.timestampText){editTs(m);} else {m.timestampText=fmtNow();await put('messages',m);keepScrollInPlace(()=>renderMessages());} return;}
   if(a==='insert'){openInsert(m.id);return;}
   if(a==='multi'){enterSelectMode();return;}
   if(a==='tap'){openTapback(m);return;}
@@ -1901,7 +1901,7 @@ function editTs(m){
   const now=new Date();
   const def=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   promptModal('插入时间戳','格式:2026/10/1 20:03',m.timestampText||def,async v=>{
-    m.timestampText=v;await put('messages',m);keepScroll(()=>renderMessages());
+    m.timestampText=v;await put('messages',m);keepScrollInPlace(()=>renderMessages());
   });
 }
 
@@ -2110,6 +2110,7 @@ async function sendBlob(type,data){
   keepScroll(()=>renderMessages());
 }
 function keepScroll(fn){const s=$('#convo-scroll');const top=s.scrollTop,height=s.scrollHeight;s.classList.add('scroll');fn();requestAnimationFrame(()=>{s.scrollTop=top+(s.scrollHeight-height);});}
+function keepScrollInPlace(fn){const s=$('#convo-scroll');const top=s.scrollTop;fn();requestAnimationFrame(()=>{s.scrollTop=top;});}
 
 /* ===================== 贴纸键盘 / 表情包 ===================== */
 let stickerDelMode=false;
