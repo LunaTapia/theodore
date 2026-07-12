@@ -1119,6 +1119,7 @@ const TAPBACKS=['✅','❌','💩','🌹','👍','❤️','😂','☺️','🥵'
 const $=s=>document.querySelector(s);
 const $$=s=>Array.from(document.querySelectorAll(s));
 function blobUrl(b){return b?URL.createObjectURL(b):null;}
+function blobToDataURL(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(blob);});}
 function avatarHtml(av,bytes,cls){ // av: blob or dataurl
   if(av){return `<img class="avatar ${cls||''}" src="${typeof av==='string'?av:blobUrl(av)}" alt="">`;}
   const ch=bytes?bytes.slice(0,1):'·';
@@ -2535,7 +2536,7 @@ function setChatBackground(){
   $('#modal').dataset.bgPicker='1';
   $('#modal').classList.add('active');
   card.querySelectorAll('.bg-preview').forEach(el=>el.onclick=async()=>{const idx=parseInt(el.dataset.idx);await applyBackground(BG_PRESETS[idx].css,BG_PRESETS[idx].theme);$('#modal').classList.remove('active');delete $('#modal').dataset.bgPicker;});
-  $('#bg-custom').onclick=()=>pickImage(async f=>{const url=blobUrl(f);await applyBackground(`url(${url}) center/cover no-repeat`);$('#modal').classList.remove('active');delete $('#modal').dataset.bgPicker;});
+  $('#bg-custom').onclick=()=>pickImage(async f=>{const b64=await blobToDataURL(f);await applyBackground(`url(${b64}) center/cover no-repeat`);$('#modal').classList.remove('active');delete $('#modal').dataset.bgPicker;});
   $('#bg-cancel').onclick=()=>{$('#modal').classList.remove('active');delete $('#modal').dataset.bgPicker;};
 }
 async function applyBackground(css, theme){
