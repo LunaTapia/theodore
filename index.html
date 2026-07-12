@@ -370,7 +370,7 @@ img{display:block;-webkit-user-drag:none;}
 #quote-preview .qp-close:active,#quote-preview .qp-close.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 
 /* 内心戏 */
-.inner-box{margin-top:5px;border:1px dashed rgba(255,255,255,.3);border-radius:12px;padding:6px 9px;font-size:13px;font-style:italic;opacity:.9;background:rgba(255,255,255,.05);}
+.inner-box{margin-top:5px;border:1px dashed rgba(255,255,255,.3);border-radius:12px;padding:6px 9px;font-size:13px;font-style:italic;opacity:.9;background:rgba(255,255,255,.05);white-space:pre-wrap;}
 .inner-box .ih{font-size:10px;opacity:.55;font-style:normal;letter-spacing:1px;}
 
 /* 时间戳 → 微信式居中气泡 */
@@ -447,7 +447,7 @@ img{display:block;-webkit-user-drag:none;}
 }
 .inline-edit{display:none;flex-direction:column;gap:6px;padding:8px;background:var(--glass-strong);border-radius:14px;margin-bottom:6px;}
 .inline-edit.active{display:flex;}
-.inline-edit textarea{flex:1;min-height:36px;max-height:90px;border-radius:10px;background:var(--bg-1);border:1px solid var(--border-soft);padding:8px;font-size:14px;color:var(--text);outline:none;resize:none;}
+.inline-edit textarea{flex:1;min-height:120px;max-height:50vh;border-radius:10px;background:var(--bg-1);border:1px solid var(--border-soft);padding:8px;font-size:14px;color:var(--text);outline:none;resize:none;overflow-y:auto;}
 .inline-edit .acts{display:flex;gap:8px;justify-content:flex-end;}
 .mini-btn{
   padding:8px 16px;border-radius:12px;
@@ -2694,6 +2694,7 @@ function bindGlobal(){
   const ta=$('#msg-input');
   ta.addEventListener('input',()=>autoGrow(ta));
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}});
+  ta.addEventListener('paste',e=>{const items=e.clipboardData?.items;if(!items)return;for(const it of items){if(it.type.startsWith('image/')){e.preventDefault();const file=it.getAsFile();if(file){insertMsg(State.messages[State.chatId].slice(-1)[0]?.id,{type:'image',blob:file});showToast('图片已发送');}break;}}});
   $('#send-btn').onclick=sendText;
   $('#sticker-btn').onclick=()=>{$('#plus-panel').classList.remove('active');$('#sticker-panel').classList.toggle('active');renderStickers();};
   $('#plus-btn').onclick=()=>{$('#sticker-panel').classList.remove('active');$('#plus-panel').classList.toggle('active');};
