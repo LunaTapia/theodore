@@ -219,6 +219,7 @@ img{display:block;-webkit-user-drag:none;}
 .drag-ghost{opacity:.4;}
 .drag-over-up{box-shadow:0 -2px 0 0 var(--accent);}
 .drag-over-down{box-shadow:0 2px 0 0 var(--accent);}
+.press-to-drag{opacity:.5;transform:scale(0.97);}
 
 /* ============ 联系人 ============ */
 .contact-grid{padding:8px 12px;display:flex;flex-direction:column;gap:2px;}
@@ -1260,7 +1261,7 @@ function renderChats(){
       <div class="meta"><div class="name">${esc(chatTitle(c))}</div><div class="prev">${esc(prev.text)}</div></div>
       <div class="right">${c.unread?`<div class="badge">${c.unread}</div>`:''}<div style="font-size:11px">${c.pinned?'置顶':''}</div></div>
       <div class="more-btn" title="更多操作">⋯</div>`;
-    el.addEventListener('click',()=>{ if(State._dragMoved)return; openChat(c.id); });
+    el.addEventListener('click',()=>{ if(State._dragMoved)return; State._dragMoved=true; openChat(c.id); setTimeout(()=>State._dragMoved=false,500); });
     {const mb=el.querySelector('.more-btn');
       // 关键：pointerdown 阶段就拦截，阻止 enableLongPress 的 timer 启动
       mb.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1268,7 +1269,7 @@ function renderChats(){
       mb.addEventListener('click',e=>{e.stopImmediatePropagation();e.preventDefault();chatMenu(c,mb);});
     }
     enableLongPress(el,()=>chatMenu(c,el));
-    enableDragSort(el,'chats',c.id);
+    enableDragSort(el,'chats',c.id);enableTouchDragSort(el,'chats',c.id);
     wrap.appendChild(el);
   });
 }
@@ -1286,13 +1287,13 @@ function renderContacts(){
     el.innerHTML=`${avatarHtml(c.avatar,c.name)}
       <div class="meta"><div class="name">${esc(c.name)}</div><div class="prev" style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:${c.color||'#888'}"></span>主题色</div></div>
       <div class="more-btn" title="更多操作">⋯</div>`;
-    el.addEventListener('click',()=>{ if(State._dragMoved)return; startChatWith(c.id); });
+    el.addEventListener('click',()=>{ if(State._dragMoved)return; State._dragMoved=true; startChatWith(c.id); setTimeout(()=>State._dragMoved=false,500); });
     {const mb=el.querySelector('.more-btn');
       mb.addEventListener('pointerdown',e=>e.stopPropagation());
       mb.addEventListener('click',e=>{e.stopImmediatePropagation();e.preventDefault();contactMenu(c,mb);});
     }
     enableLongPress(el,()=>contactMenu(c,el));
-    enableDragSort(el,'contacts',c.id);
+    enableDragSort(el,'contacts',c.id);enableTouchDragSort(el,'contacts',c.id);
     wrap.appendChild(el);
   });
 }
@@ -1337,7 +1338,7 @@ function enableLongPress(el,cb){
   el.addEventListener('pointerdown',e=>{
     if(e.target.closest('.select-box'))return;
     startX=e.clientX;startY=e.clientY;
-    timer=setTimeout(()=>{timer=null;cb();},450);
+    timer=setTimeout(()=>{if(State._dragMoved)return;timer=null;cb();},450);
   });
   const cancel=()=>{if(timer){clearTimeout(timer);timer=null;}};
   el.addEventListener('pointermove',e=>{if(timer&&(Math.abs(e.clientX-startX)>8||Math.abs(e.clientY-startY)>8))cancel();});
@@ -1346,12 +1347,28 @@ function enableLongPress(el,cb){
   el.addEventListener('contextmenu',e=>{e.preventDefault();cb();});
 }
 function enableDragSort(el,storeName,id){
+  // 桌面端：HTML5 拖拽
   el.draggable=true;
   el.addEventListener('dragstart',e=>{State._dragId=id;State._dragMoved=false;el.classList.add('drag-ghost');e.dataTransfer.effectAllowed='move';});
   el.addEventListener('dragend',()=>{el.classList.remove('drag-ghost');$$('.'+el.className.split(' ')[0]).forEach(x=>x.classList.remove('drag-over-up','drag-over-down'));setTimeout(()=>State._dragMoved=false,80);});
   el.addEventListener('dragover',e=>{e.preventDefault();if(State._dragId&&State._dragId!==id){const r=el.getBoundingClientRect();const after=(e.clientY-r.top)>r.height/2;el.classList.toggle('drag-over-down',!after);el.classList.toggle('drag-over-up',after);}});
   el.addEventListener('drop',e=>{e.preventDefault();const tid=State._dragId;if(!tid||tid===id)return;State._dragMoved=true;reorder(storeName,tid,id);
     $$('.'+el.className.split(' ')[0]).forEach(x=>x.classList.remove('drag-over-up','drag-over-down'));});
+}
+function enableTouchDragSort(el,storeName,id){
+  // 移动端：触摸拖拽（长按 350ms 后启动，避免与点击/长按菜单冲突）
+  let timer=null,startY=0,startX=0,dragging=false,ghost=null;
+  const cls=el.className.split(' ')[0];
+  const clearTimer=()=>{if(timer){clearTimeout(timer);timer=null;}el.classList.remove('press-to-drag');};
+  const makeGhost=()=>{const g=el.cloneNode(true);g.style.position='fixed';g.style.zIndex='9999';g.style.opacity='0.9';g.style.pointerEvents='none';g.style.width=el.offsetWidth+'px';g.classList.add('drag-ghost');return g;};
+  const updateGhost=(y)=>{if(ghost)ghost.style.top=(y-ghost.offsetHeight/2)+'px';};
+  const findTarget=(y)=>{const items=[...el.parentElement.querySelectorAll('.'+cls)].filter(x=>x!==el&&x!==ghost);for(const it of items){const r=it.getBoundingClientRect();if(y>=r.top&&y<=r.bottom)return it;}return null;};
+  const clearOver=()=>{el.parentElement.querySelectorAll('.'+cls).forEach(x=>x.classList.remove('drag-over-up','drag-over-down'));State._touchDragTarget=null;};
+  const setOver=(target,y)=>{clearOver();if(!target)return;const r=target.getBoundingClientRect();const after=(y-r.top)>r.height/2;target.classList.toggle('drag-over-down',!after);target.classList.toggle('drag-over-up',after);State._touchDragTarget=target;};
+  el.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const t=e.touches[0];startX=t.clientX;startY=t.clientY;dragging=false;el.classList.add('press-to-drag');timer=setTimeout(()=>{timer=null;dragging=true;State._dragId=id;State._dragMoved=true;ghost=makeGhost();ghost.style.left=el.getBoundingClientRect().left+'px';updateGhost(startY);document.body.appendChild(ghost);el.classList.add('drag-ghost');},300);},{passive:true});
+  el.addEventListener('touchmove',e=>{if(!dragging){if(timer){const t=e.touches[0];if(Math.abs(t.clientX-startX)>10||Math.abs(t.clientY-startY)>10)clearTimer();}return;}e.preventDefault();const t=e.touches[0];updateGhost(t.clientY);const target=findTarget(t.clientY);setOver(target,t.clientY);},{passive:false});
+  el.addEventListener('touchend',e=>{clearTimer();el.classList.remove('press-to-drag');if(!dragging)return;dragging=false;if(ghost){ghost.remove();ghost=null;}el.classList.remove('drag-ghost');const target=State._touchDragTarget;if(target){const tid=target.dataset.id;if(tid&&tid!==id){State._dragMoved=true;reorder(storeName,id,tid);}}clearOver();State._dragId=null;setTimeout(()=>State._dragMoved=false,80);});
+  el.addEventListener('touchcancel',()=>{clearTimer();if(ghost){ghost.remove();ghost=null;}dragging=false;el.classList.remove('drag-ghost','press-to-drag');clearOver();State._dragId=null;});
 }
 function reorder(storeName,dragId,targetId){
   let arr = storeName==='chats'?State.chats:State.contacts;
