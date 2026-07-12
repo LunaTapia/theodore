@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -19,8 +19,8 @@
   --border:rgba(255,255,255,0.06);
   --border-soft:rgba(255,255,255,0.04);
   --text:#e8eaf0;
-  --text-dim:rgba(232,234,240,0.52);
-  --text-faint:rgba(232,234,240,0.30);
+  --text-dim:rgba(232,234,240,0.80);
+  --text-faint:rgba(232,234,240,0.60);
   --blue-gray:rgba(90,110,160,0.55);  /* 蓝灰色调 */
   --blue-gray-light:rgba(120,145,200,0.25);
   --me-1:color-mix(in oklch, var(--accent) 80%, white 20%); --me-2:color-mix(in oklch, var(--accent) 50%, white 50%);    /* 跟随 --accent，随壁纸主题变色 */
@@ -33,11 +33,12 @@
   --nav-h:64px;
 
   /* ============ 深色果冻玻璃按钮系统 ============ */
-  --glass-btn-bg:rgba(18,18,26,0.68);
-  --glass-btn-bd:rgba(255,255,255,0.09);
-  --glass-btn-shine:rgba(255,255,255,0.18);
-  --glass-btn-shadow:rgba(0,0,0,0.72);
+  --glass-btn-bg:rgba(255,255,255,0.10);      /* 变透：底色半透明 */
+  --glass-btn-bd:rgba(255,255,255,0.12);      /* 边框微亮 */
+  --glass-btn-shine:rgba(255,255,255,0.15);   /* 顶光：玻璃倒角反光 */
+  --glass-btn-shadow:rgba(0,0,0,0.35);        /* 浮起：底部外阴影 */
   --glass-btn-blur:20px;
+  --glass-btn-inset-dark:rgba(0,0,0,0.20);    /* 底部内阴影压暗 */
 }
 @keyframes jelly-press{
   0%  {transform:scale(1) translateY(0);}
@@ -52,16 +53,20 @@
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   border:1px solid var(--glass-btn-bd);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 22px var(--glass-btn-shadow);
+  box-shadow:
+    inset 0 0.5px 0 0 var(--glass-btn-shine),          /* 顶光 */
+    inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),    /* 底部压暗 */
+    0 4px 12px var(--glass-btn-shadow);                /* 浮起外阴影 */
   transition:box-shadow .15s,background .15s,transform .15s;
 }
-.glass-btn:hover{background:rgba(22,22,32,0.78);transform:translateY(-1px);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 8px 28px var(--glass-btn-shadow);}
-.glass-btn:active,.glass-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:0 1px 0 rgba(255,255,255,0.08) inset,0 2px 8px var(--glass-btn-shadow);transform:scale(0.97);}
-.glass-btn.active{background:rgba(28,28,42,0.90);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow),0 0 0 1px rgba(255,255,255,0.12) inset;}
+.glass-btn:hover{background:rgba(255,255,255,0.14);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+.glass-btn:active,.glass-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);transform:scale(0.97);}
+.glass-btn.active{background:rgba(255,255,255,0.18);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px rgba(0,0,0,0.30),0 0 0 1px rgba(255,255,255,0.10) inset;}
   --font: "Zen Maru Gothic","M PLUS Rounded 1c","Nunito","Quicksand","PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;min-height:100%;height:100%;}
+#chat-list,#contact-list{padding:6px 10px 0;}
 body{
   font-family:var(--font);
   color:var(--text);
@@ -80,6 +85,9 @@ input,textarea{font-family:inherit;color:inherit;}
 img{display:block;-webkit-user-drag:none;}
 ::-webkit-scrollbar{width:0;height:0;}
 
+/* ============ 壁纸：独立 fixed 元素，绕过 iOS background-attachment:fixed 失效 bug ============ */
+#wallpaper{position:fixed;inset:0;z-index:-1;pointer-events:none;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:transparent;}
+
 /* ============ 布局骨架 ============ */
 #app{position:fixed;inset:0;display:flex;flex-direction:column;}
 .view{position:absolute;inset:0;display:none;flex-direction:column;}
@@ -90,10 +98,8 @@ img{display:block;-webkit-user-drag:none;}
 .topbar{
   flex:0 0 auto;height:58px;padding-top:env(safe-area-inset-top);
   display:flex;align-items:center;gap:10px;padding-left:16px;padding-right:16px;
-  backdrop-filter:blur(22px) saturate(160%);
-  -webkit-backdrop-filter:blur(22px) saturate(160%);
-  background:rgba(10,10,18,0.5);
-  border-bottom:1px solid var(--border-soft);
+  background:transparent;
+  border-bottom:none;
   z-index:20;
 }
 .topbar .title{font-weight:600;font-size:18px;letter-spacing:.3px;font-family:var(--font);}
@@ -103,11 +109,11 @@ img{display:block;-webkit-user-drag:none;}
   background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:transform .15s,box-shadow .15s,background .15s;
 }
-.icon-btn:hover{background:rgba(22,22,32,0.78);transform:translateY(-1px);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 20px var(--glass-btn-shadow);}
-.icon-btn:active,.icon-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:0 1px 0 rgba(255,255,255,0.08) inset,0 2px 8px var(--glass-btn-shadow);transform:scale(0.93);}
+.icon-btn:hover{background:rgba(255,255,255,0.14);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+.icon-btn:active,.icon-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);transform:scale(0.93);}
 .icon-btn svg{width:20px;height:20px;fill:none;stroke:var(--text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 
 /* 列表滚动区 */
@@ -118,80 +124,118 @@ img{display:block;-webkit-user-drag:none;}
   position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));
   transform:translateX(-50%);
   display:flex;gap:6px;
-  background:var(--bg-glass);
+  background:rgba(255,255,255,0.04);  /* 取消原来不透明黑底，改为高透明白玻璃，与其他 glass-btn 同体系 */
   backdrop-filter:blur(28px) saturate(200%);-webkit-backdrop-filter:blur(28px) saturate(200%);
-  border:1px solid var(--border);border-radius:22px;
+  border:1px solid rgba(255,255,255,0.08);border-radius:22px;
   padding:6px 10px;z-index:30;
-  box-shadow:0 8px 32px rgba(0,0,0,.45);
+  box-shadow:0 8px 32px rgba(0,0,0,.25);  /* 阴影减淡 */
   transition:opacity .25s,transform .25s;
 }
 #bottomnav.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(20px);}
 .nav-item{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   min-width:56px;padding:7px 10px;border-radius:16px;
-  color:rgba(232,234,240,0.65);cursor:pointer;
+  color:rgba(232,234,240,0.90);cursor:pointer;
   text-shadow:0 1px 2px rgba(0,0,0,0.4);
   background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:background .15s,box-shadow .15s,transform .15s;
 }
-.nav-item:hover{background:rgba(22,22,32,0.78);transform:translateY(-1px);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 20px var(--glass-btn-shadow);}
+.nav-item:hover{background:rgba(255,255,255,0.14);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
 .nav-item:active,.nav-item.pressing{animation:jelly-press .22s ease forwards;}
-.nav-item.active{color:#fff;background:rgba(28,28,42,0.90);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow),0 0 0 1px rgba(255,255,255,0.12) inset;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+.nav-item.active{color:#fff;background:rgba(255,255,255,0.18);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px rgba(0,0,0,0.30),0 0 0 1px rgba(255,255,255,0.10) inset;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
 .nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .nav-item .lbl{font-size:10px;font-weight:600;}
 
 /* ============ 聊天列表 ============ */
 .list-section{padding:8px 14px 0;}
-.search-wrap{margin:10px 14px 6px;position:relative;}
+.search-wrap{margin:8px 12px 4px;position:relative;}
 .search-wrap input{
   width:100%;height:42px;border-radius:14px;border:1px solid var(--border-soft);
   background:var(--glass);padding:0 14px 0 40px;font-size:15px;outline:none;
 }
 .search-wrap .s-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--text-dim);fill:none;stroke-width:2;stroke-linecap:round;}
 .chat-item,.contact-item{
-  display:flex;align-items:center;gap:12px;padding:10px 6px;border-radius:16px;
-  transition:background .15s,transform .12s;position:relative;touch-action:pan-y;
-  -webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:
+    inset 0 0.5px 0 0 rgba(255,255,255,0.10),
+    inset 0 -0.5px 0 0 rgba(0,0,0,0.10),
+    0 2px 8px rgba(0,0,0,0.20);
+  transition:background .15s,box-shadow .15s,transform .15s;
+  position:relative;touch-action:pan-y;-webkit-tap-highlight-color:transparent;
+  margin-bottom:6px;
 }
-.chat-item:active,.contact-item:active{background:rgba(255,255,255,0.08);transform:scale(0.985);}
+.chat-item:hover,.contact-item:hover{background:rgba(255,255,255,0.10);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.12),inset 0 -0.5px 0 0 rgba(0,0,0,0.10),0 4px 12px rgba(0,0,0,0.30);}
+.chat-item:active,.contact-item:active,.chat-item.pressing,.contact-item.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.06),inset 0 -0.5px 0 0 rgba(0,0,0,0.10),0 1px 4px rgba(0,0,0,0.20);}
 .avatar{
   width:50px;height:50px;border-radius:50%;flex:0 0 auto;object-fit:cover;
   position:relative;overflow:hidden;
   background:var(--glass-btn-bg);
   border:1px solid var(--glass-btn-bd);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 8px 28px var(--glass-btn-shadow);
+  box-shadow:
+    inset 0 0.5px 0 0 var(--glass-btn-shine),
+    inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),
+    0 4px 12px var(--glass-btn-shadow);
   display:flex;align-items:center;justify-content:center;
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
 }
-.avatar::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,0.06);box-shadow:0 1px 0 rgba(255,255,255,0.35) inset;pointer-events:none;z-index:1;}
-.avatar::after{content:'';position:absolute;bottom:-4px;left:10%;right:10%;height:8px;background:radial-gradient(ellipse at center top,rgba(0,0,0,0.55) 0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:0;}
+.avatar::before{content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 50%);pointer-events:none;z-index:1;}
+.avatar::after{content:'';position:absolute;bottom:-3px;left:15%;right:15%;height:6px;background:radial-gradient(ellipse at center top,rgba(0,0,0,0.4) 0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:0;}
 .avatar img{width:100%;height:100%;object-fit:cover;display:block;z-index:0;image-rendering:auto;}
 .avatar>div,.avatar>span{z-index:0;}
 .avatar.sm{width:34px;height:34px;font-size:14px;}
 .avatar.xs{width:26px;height:26px;font-size:11px;}
 .avatar.med{width:64px;height:64px;font-size:24px;}
+.chat-item .avatar,.contact-item .avatar{width:42px;height:42px;font-size:15px;}
 .meta{flex:1;min-width:0;}
-.meta .name{font-weight:500;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.meta .prev{font-size:13px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
-.chat-item .right{text-align:right;color:var(--text-faint);font-size:12px;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;font-weight:400;}
+.meta .name{font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.meta .prev{font-size:12.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.chat-item .right{text-align:right;color:var(--text-dim);font-size:12px;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;font-weight:400;}
 .badge{background:var(--accent);color:#fff;font-size:11px;font-weight:700;border-radius:10px;min-width:18px;height:18px;padding:0 5px;display:flex;align-items:center;justify-content:center;}
+/* "⋯" 更多按钮：桌面 hover 时变亮，手机常显；点击出菜单，长按/右键仍走原逻辑 */
+.more-btn{
+  width:26px;height:26px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:1;color:var(--text-dim);
+  cursor:pointer;flex:0 0 auto;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.06);
+  opacity:0.5;
+  transition:all .15s ease;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.chat-item:hover .more-btn,.contact-item:hover .more-btn{opacity:1;background:rgba(255,255,255,0.10);}
+.more-btn:hover{background:rgba(255,255,255,0.16) !important;transform:scale(1.08);}
+.more-btn:active{animation:jelly-press .22s ease forwards;background:var(--accent) !important;color:#fff !important;}
+/* 触屏设备：常显 */
+@media (hover:none){.more-btn{opacity:0.85;}}
 .drag-ghost{opacity:.4;}
 .drag-over-up{box-shadow:0 -2px 0 0 var(--accent);}
 .drag-over-down{box-shadow:0 2px 0 0 var(--accent);}
 
 /* ============ 联系人 ============ */
-.contact-grid{padding:10px 14px;display:flex;flex-direction:column;gap:2px;}
+.contact-grid{padding:8px 12px;display:flex;flex-direction:column;gap:2px;}
+.contact-grid .contact-item{backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);}
+
 
 /* ============ 我 ============ */
 .me-head{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 0 14px;}
 .me-name{font-size:22px;font-weight:800;}
 .me-sub{font-size:13px;color:var(--text-dim);}
-.panel{margin:10px 16px;background:var(--glass);border:1px solid var(--border-soft);border-radius:18px;overflow:hidden;}
-.panel .row{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--border-soft);}
+.panel{margin:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.10),inset 0 -0.5px 0 0 rgba(0,0,0,0.10),0 2px 8px rgba(0,0,0,0.20);
+}
+.panel .row{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--glass-btn-bd);background:transparent;transition:background .15s;}
+.panel .row:hover{background:rgba(255,255,255,0.04);}
 .panel .row:last-child{border-bottom:none;}
 .panel .row .t{flex:1;font-weight:600;}
 .panel .row svg{width:20px;height:20px;stroke:var(--text-dim);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
@@ -199,17 +243,17 @@ img{display:block;-webkit-user-drag:none;}
   position:absolute;right:18px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px);
   width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,var(--me-1),var(--me-2));
-  box-shadow:0 1px 0 rgba(255,255,255,0.22) inset,0 8px 28px rgba(139,124,245,.5),0 10px 36px rgba(0,0,0,0.45);
+  box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.30),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 4px 14px rgba(0,0,0,0.40);
   z-index:25;transition:transform .18s,box-shadow .18s;
 }
-.fab:hover{transform:scale(1.06) translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,0.22) inset,0 10px 36px rgba(139,124,245,.65),0 12px 42px rgba(0,0,0,0.5);}
+.fab:hover{transform:scale(1.06) translateY(-1px);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.30),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 6px 20px rgba(0,0,0,0.50);}
 .fab:active,.fab.pressing{animation:jelly-press .22s ease forwards;}
 .fab svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;}
 
 /* ============ 对话页 ============ */
 #convo-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 6px;display:flex;flex-direction:column;gap:3px;
-  background:rgba(8,8,14,0.4);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:transparent;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
 }
 .day-sep{align-self:center;font-size:11px;color:var(--text-faint);margin:6px 0;padding:2px 10px;background:var(--glass-strong);border-radius:10px;}
 
@@ -220,7 +264,7 @@ img{display:block;-webkit-user-drag:none;}
 .msg-row{display:flex;gap:6px;align-items:flex-end;max-width:88%;border-radius:10px;position:relative;z-index:1;padding:2px 0;}
 .msg-row.me{align-self:flex-end;}
 .msg-row .av-slot{width:34px;flex:0 0 auto;min-height:1px;}  /* 头像位固定34px,即使空也占位 */
-.msg-row.selected{background:color-mix(in oklch, var(--accent) 15%, transparent);border:1.5px solid var(--accent);}
+.msg-row.selected{/* 去除选中后的外框：用户只要勾选样式，不要高亮框 */}
 .msg-row.selected .select-box{background:var(--accent);border-color:var(--accent);}
 .msg-row.selected .select-box svg{opacity:1;stroke:#fff;}
 .select-box{
@@ -232,20 +276,50 @@ img{display:block;-webkit-user-drag:none;}
 .msg-row:hover{background:rgba(255,255,255,0.03);}
 .msg-row.me{justify-content:flex-end;}
 .msg-row .av-slot{width:34px;flex:0 0 auto;}
-/* 气泡容器:放宽到78%,并允许更贴边 */
-.bubble-wrap{position:relative;flex:0 1 auto;max-width:88%;min-width:0;}
+/* 气泡容器:用 fit-content 让短文本一行排完。
+   max-width 100% 跟 msg-row 看齐（不再 88% × msg-row 二次压缩成 77%）——
+   对方气泡会被 88% 压缩是因为 msg-row 里有 av-slot 34px 分担；
+   我方无 av-slot，88% × msg-row 会二次压窄。改用 msg-row 自身的 88% 上限统一。 */
+.bubble-wrap{position:relative;width:fit-content;max-width:100%;}
 .msg-row.me .bubble-wrap{align-items:flex-end;margin-right:0;margin-left:0;}
 .bubble{
-  position:relative;padding:8px 12px;border-radius:20px;font-size:14px;line-height:1.45;word-break:break-word;
-  background:var(--bubble-bg, var(--bubble-other, rgba(28,28,46,.82)));border:1px solid var(--bubble-border, rgba(90,100,160,.22));
+  position:relative;padding:8px 12px;border-radius:20px;font-size:14px;line-height:1.45;
+  overflow-wrap:break-word;word-wrap:break-word;word-break:normal;
+  /* 对方：玻璃质感 = 你的气泡色(--bubble-bg) 兜底为中性灰玻璃；顶光+底暗+弥散阴影+模糊 */
+  background:var(--bubble-bg, linear-gradient(180deg, rgba(255,255,255,0.07), rgba(40,42,66,0.42)));
+  border:1px solid var(--bubble-border, rgba(110,120,170,.22));
   backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
-  transition:transform .12s,filter .12s;-webkit-tap-highlight-color:transparent;
+  box-shadow:
+    inset 0 0.5px 0 0 rgba(255,255,255,0.18),
+    inset 0 -0.5px 0 0 rgba(0,0,0,0.15),
+    0 2px 8px rgba(0,0,0,0.25);
+  transition:transform .12s,box-shadow .12s,filter .12s;-webkit-tap-highlight-color:transparent;
 }
-.bubble-wrap:active .bubble{transform:scale(0.97);filter:brightness(0.9);}
-.msg-row.me .bubble{background:var(--bubble-bg, var(--bubble-me, rgba(45,45,65,.75)));border:1px solid var(--bubble-border, rgba(120,130,180,.25));backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);}
+.bubble-wrap:active .bubble{transform:scale(0.97);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.10),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 1px 4px rgba(0,0,0,0.20);}
+.msg-row.me .bubble{
+  /* 我方：玻璃质感 = 你的气泡色(--bubble-bg) 兜底为淡紫玻璃(已调暗)；顶光减弱 */
+  background:var(--bubble-bg, linear-gradient(180deg, rgba(150,160,255,0.10), rgba(90,100,200,0.30)));
+  border:1px solid var(--bubble-border, rgba(150,160,230,.32));
+  backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:
+    inset 0 0.5px 0 0 rgba(255,255,255,0.16),
+    inset 0 -0.5px 0 0 rgba(0,0,0,0.15),
+    0 2px 8px rgba(0,0,0,0.25);
+}
+/* 气泡尾巴：已删除 */
 .bubble img.att{max-width:200px;border-radius:14px;margin-top:2px;image-rendering:-webkit-optimize-contrast;display:block;}
+/* 画板气泡：放大到 420px，包裹层让画板深度背景融进气泡圆角 */
+.att-draw{display:inline-block;max-width:420px;border-radius:16px;overflow:hidden;background:transparent;margin-top:2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06);}
+.att-draw img.att{max-width:100%;width:100%;height:auto;border-radius:0;margin-top:0;display:block;image-rendering:auto;}
+/* 气泡里只有画板时：气泡收紧只包裹画板，不填满整行
+   不设 max-width（会反向压缩 att-draw）。bubble-wrap 的 max-width:88% 够用 */
+.bubble:has(> .att-draw:only-child){display:inline-block!important;width:fit-content!important;padding:6px!important;text-align:center;}
+/* 同样要控制外层 bubble-wrap 不被拉成 88% */
+.bubble-wrap:has(> .bubble > .att-draw:only-child){width:fit-content!important;}
 .bubble .file-chip,.bubble .loc-chip,.bubble .music-chip{
-  display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;background:rgba(0,0,0,.18);
+  display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+  box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.12),inset 0 -0.5px 0 0 rgba(0,0,0,0.10),0 2px 6px rgba(0,0,0,0.18);
   margin-top:4px;min-width:180px;
 }
 .bubble .file-chip svg,.bubble .loc-chip svg,.bubble .music-chip svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;flex:0 0 auto;}
@@ -285,8 +359,17 @@ img{display:block;-webkit-user-drag:none;}
 #quote-preview .qp-content{flex:1;min-width:0;}
 #quote-preview .qp-name{font-size:12px;font-weight:700;color:rgba(160,200,255,.95);margin-bottom:1px;}
 #quote-preview .qp-text{font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#quote-preview .qp-close{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-dim);background:var(--glass);flex:0 0 auto;}
-#quote-preview .qp-close:active{background:var(--glass-strong);}
+#quote-preview .qp-close{
+  width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--text-dim);flex:0 0 auto;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px var(--glass-btn-shadow);
+  transition:transform .15s,box-shadow .15s;
+}
+#quote-preview .qp-close:hover{transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 5px 14px rgba(0,0,0,0.40);}
+#quote-preview .qp-close:active,#quote-preview .qp-close.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 
 /* 内心戏 */
 .inner-box{margin-top:5px;border:1px dashed rgba(255,255,255,.3);border-radius:12px;padding:6px 9px;font-size:13px;font-style:italic;opacity:.9;background:rgba(255,255,255,.05);}
@@ -334,10 +417,11 @@ img{display:block;-webkit-user-drag:none;}
   backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
   border-top:1px solid var(--border);
   padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  position:relative;z-index:60;  /* 创建独立堆叠上下文,让内部 +/贴纸/画板 面板浮在消息之上 */
 }
 .role-strip{display:flex;gap:8px;padding:4px 4px 8px;overflow-x:auto;align-items:center;}
-.role-strip .avatar{border:2px solid transparent;transition:transform .12s,border-color .15s;}
-.role-strip .avatar.cur{border-color:var(--accent);transform:scale(1.08);}
+.role-strip .avatar{border:2px solid transparent;transition:transform .18s,box-shadow .18s,border-color .15s;}
+.role-strip .avatar.cur{border-color:var(--accent);box-shadow:0 0 0 2px rgba(139,124,245,0.4),0 1px 0 var(--glass-btn-shine) inset,0 8px 28px var(--glass-btn-shadow);transform:scale(1.06);}
 .role-strip .nm{font-size:10px;color:var(--text-dim);text-align:center;margin-top:2px;white-space:nowrap;}
 .role-strip .rp{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;}
 .input-line{display:flex;align-items:flex-end;gap:7px;}
@@ -346,14 +430,14 @@ img{display:block;-webkit-user-drag:none;}
   background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:background .15s,box-shadow .15s,transform .15s;
 }
-.plus-btn:hover,.sticker-btn:hover,.voice-btn:hover{background:rgba(22,22,32,0.80);transform:translateY(-1px);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 20px var(--glass-btn-shadow);}
-.plus-btn:active,.sticker-btn:active,.voice-btn:active,.plus-btn.pressing,.sticker-btn.pressing,.voice-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:0 1px 0 rgba(255,255,255,0.08) inset,0 2px 8px var(--glass-btn-shadow);transform:scale(0.93);}
-.send-btn{background:linear-gradient(135deg,var(--me-1),var(--me-2));border:none;box-shadow:0 1px 0 rgba(255,255,255,0.22) inset,0 4px 18px rgba(0,0,0,0.5);transition:box-shadow .15s,transform .15s;}
-.send-btn:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,0.22) inset,0 6px 24px rgba(0,0,0,0.55);}
-.send-btn:active,.send-btn.pressing{animation:jelly-press .22s ease forwards;transform:scale(0.93);}
+.plus-btn:hover,.sticker-btn:hover,.voice-btn:hover{background:rgba(255,255,255,0.14);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+.plus-btn:active,.sticker-btn:active,.voice-btn:active,.plus-btn.pressing,.sticker-btn.pressing,.voice-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);transform:scale(0.93);}
+.send-btn{background:linear-gradient(135deg,var(--me-1),var(--me-2));border:none;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.25),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 4px 12px rgba(0,0,0,0.35);transition:box-shadow .15s,transform .15s;}
+.send-btn:hover{transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.25),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 6px 18px rgba(0,0,0,0.45);}
+.send-btn:active,.send-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.15),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 2px 6px rgba(0,0,0,0.25);transform:scale(0.93);}
 .plus-btn svg,.sticker-btn svg,.send-btn svg,.voice-btn svg{width:22px;height:22px;stroke:var(--text);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .send-btn svg{stroke:#fff;fill:#fff;stroke-width:0;}
 .voice-btn.rec{background:var(--danger);}
@@ -372,31 +456,52 @@ img{display:block;-webkit-user-drag:none;}
   background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   font-size:13px;font-weight:600;transition:background .15s,box-shadow .15s,transform .15s;
 }
-.mini-btn:hover{background:rgba(22,22,32,0.80);transform:translateY(-1px);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 22px var(--glass-btn-shadow);}
-.mini-btn:active,.mini-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:0 1px 0 rgba(255,255,255,0.08) inset,0 2px 8px var(--glass-btn-shadow);}
+.mini-btn:hover{background:rgba(255,255,255,0.14);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+.mini-btn:active,.mini-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 
 /* + 面板 */
-#plus-panel{display:none;background:var(--glass-strong);border-top:1px solid var(--border-soft);padding:14px 10px;flex-wrap:wrap;gap:8px 4px;justify-content:space-around;}
+#plus-panel{display:none;position:absolute;left:12px;right:12px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);z-index:65;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 12px 40px var(--glass-btn-shadow),0 20px 60px rgba(0,0,0,0.55);
+  padding:18px 14px;border-radius:24px;flex-wrap:wrap;gap:12px 8px;justify-content:space-around;
+}
 #plus-panel.active{display:flex;}
 .pp-item{display:flex;flex-direction:column;align-items:center;gap:5px;width:23%;font-size:11px;color:var(--text-dim);}
 .pp-item .ic{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;
   background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:transform .15s,box-shadow .15s;
 }
-.pp-item .ic:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 8px 24px var(--glass-btn-shadow);}
-.pp-item .ic:active,.pp-item.pressing{animation:jelly-press .22s ease forwards;}
+.pp-item .ic:hover{transform:translateY(-2px) scale(1.04);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+.pp-item .ic:active,.pp-item.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 .pp-item .ic svg{width:24px;height:24px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 
 /* 贴纸键盘 */
-#sticker-panel{display:none;max-height:200px;overflow-y:auto;background:var(--glass-strong);border-top:1px solid var(--border-soft);padding:10px;grid-template-columns:repeat(4,1fr);gap:8px;}
+#sticker-panel{display:none;position:absolute;left:12px;right:12px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);z-index:65;
+  max-height:200px;overflow-y:auto;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 12px 40px var(--glass-btn-shadow),0 20px 60px rgba(0,0,0,0.55);
+  padding:14px;border-radius:24px;grid-template-columns:repeat(4,1fr);gap:10px;
+}
 #sticker-panel.active{display:grid;}
-.sticker-cell{aspect-ratio:1;border-radius:14px;background:var(--glass);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.sticker-cell{aspect-ratio:1;border-radius:16px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
+  transition:transform .15s,box-shadow .15s;
+}
+.sticker-cell:hover{transform:translateY(-2px) scale(1.03);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+.sticker-cell:active,.sticker-cell.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 .sticker-cell img{width:80%;height:80%;object-fit:contain;}
 .sticker-cell .sticker-del{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:2;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-weight:700;}
 .sticker-cell:hover .sticker-cell .sticker-del,.sticker-cell:active .sticker-del{opacity:1;}
@@ -404,19 +509,45 @@ img{display:block;-webkit-user-drag:none;}
 @media (hover:none){.sticker-cell.del-mode .sticker-del{opacity:1;background:rgba(255,80,80,.85);} .sticker-cell.del-mode{border:1.5px dashed var(--danger);}}
 
 /* 画板 */
-#plus-panel,#sticker-panel,#draw-panel{
-  background:var(--bg-glass);
-  backdrop-filter:blur(28px) saturate(200%);
-  -webkit-backdrop-filter:blur(28px) saturate(200%);
+#draw-panel{
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
+  border-radius:24px;
 }
-#draw-panel{display:none;flex-direction:column;}
+#draw-panel{display:none;position:absolute;left:12px;right:12px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);z-index:65;flex-direction:column;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
+  border-radius:24px;padding:14px;
+}
 #draw-panel.active{display:flex;}
 .draw-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px;font-size:14px;color:var(--text-dim);}
-.draw-header .icon-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:16px;color:var(--text);}
-#draw-canvas{width:100%;height:320px;background:#0a0c12;border-radius:12px;border:1px solid var(--border-soft);touch-action:none;}
-.draw-tools{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
-.draw-tools .pen{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;}
-.draw-tools .pen.sel{border-color:#fff;}
+.draw-header .icon-btn{width:28px;height:28px;border-radius:8px;background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);font-size:16px;color:var(--text);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px var(--glass-btn-shadow);
+  transition:transform .15s,box-shadow .15s;
+}
+.draw-header .icon-btn:hover{transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 5px 14px rgba(0,0,0,0.40);}
+.draw-header .icon-btn:active,.draw-header .icon-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
+#draw-canvas{width:100%;height:320px;background:#0a0c12;border-radius:16px;border:1px solid var(--glass-btn-bd);touch-action:none;}
+.draw-resize{height:18px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;margin-top:4px;touch-action:none;-webkit-user-select:none;user-select:none;}
+.draw-resize span{width:44px;height:4px;border-radius:2px;background:rgba(255,255,255,0.22);transition:background .15s, width .15s;}
+.draw-resize:hover span{background:rgba(255,255,255,0.42);width:56px;}
+.draw-tools{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;}
+.draw-tools .pen{width:32px;height:32px;border-radius:50%;cursor:pointer;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px var(--glass-btn-shadow);
+  transition:transform .15s,box-shadow .15s;
+}
+.draw-tools .pen:hover{transform:scale(1.08);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 5px 14px rgba(0,0,0,0.40);}
+.draw-tools .pen:active,.draw-tools .pen.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
+.draw-tools .pen.sel{border-color:#fff;box-shadow:0 0 0 2px var(--accent),inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px var(--glass-btn-shadow);}
 
 /* ============ 弹出菜单 / 浮层 — 苹果毛玻璃统一样式 ============ */
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.15);z-index:50;display:none;align-items:flex-end;justify-content:center;}
@@ -426,21 +557,27 @@ img{display:block;-webkit-user-drag:none;}
 .glass-panel{
   position:fixed;z-index:60;
   /* 暗色毛玻璃(玻璃黑) */
-  background:rgba(20,20,28,0.78);
-  backdrop-filter:blur(20px) saturate(1.3);
-  -webkit-backdrop-filter:blur(20px) saturate(1.3);
+  background:var(--glass-btn-bg);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  border:1px solid var(--glass-btn-bd);
   border-radius:16px;
-  box-shadow:
-    0 0 0 0.5px rgba(255,255,255,0.08),
-    0 0 0 1px rgba(255,255,255,0.04) inset,
-    0 8px 32px rgba(0,0,0,0.5),
-    0 2px 8px rgba(0,0,0,0.3);
-  /* 顶部玻璃高光 */
+  /* 基础阴影抽成变量,各方向追加'连体阴影'让面板阴影延伸向按钮 */
+  --gp-shadow:
+    inset 0 0.5px 0 0 var(--glass-btn-shine),
+    inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),
+    0 4px 12px var(--glass-btn-shadow);
+  box-shadow:var(--gp-shadow);
   /* 弹窗本身完整显示在屏幕内，内容区域独立滚动 */
   display:flex;flex-direction:column;
   max-height:calc(100dvh - 24px);
   overflow:hidden;
 }
+/* 连体阴影：面板阴影向按钮方向延伸，让两者像同一块悬浮物 */
+.glass-panel.arrow-bottom{box-shadow:var(--gp-shadow),0 -3px 10px rgba(0,0,0,.18);}
+.glass-panel.arrow-top{   box-shadow:var(--gp-shadow),0  3px 10px rgba(0,0,0,.18);}
+.glass-panel.arrow-left{  box-shadow:var(--gp-shadow), 3px 0 10px rgba(0,0,0,.18);}
+.glass-panel.arrow-right{ box-shadow:var(--gp-shadow),-3px 0 10px rgba(0,0,0,.18);}
 /* 内部滚动容器：让弹窗内容可滚动，但弹窗本身不超出屏幕 */
 .gp-scroll{
   overflow-x:hidden;overflow-y:auto;flex:1;min-height:0;
@@ -452,31 +589,37 @@ img{display:block;-webkit-user-drag:none;}
   position:absolute;top:0;left:10%;right:10%;height:1px;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent);
   border-radius:0 0 50% 50%;
+  z-index:2;pointer-events:none;
 }
-/* 向下展开时箭头在顶部，向右展开时箭头在左边，向上/左同理 */
+/* === 三角箭头：用户反馈太丑，全部移除（保留 .arrow-* 类名供动画 transform-origin 使用） === */
 .glass-panel::after{
-  content:'';
-  position:absolute;
-  width:10px;height:10px;
-  background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  transform:rotate(45deg);
-  z-index:-1;
+  content:'';position:absolute;
+  /* 视觉完全隐藏 */
+  display:none;
 }
-/* 箭头方向：默认向下（箭头在上） */
-.glass-panel.arrow-bottom::after{bottom:-5px;left:50%;margin-left:-5px;box-shadow:3px 3px 6px rgba(0,0,0,.2);}
-/* 箭头向上 */
-.glass-panel.arrow-top::after{top:-5px;left:50%;margin-left:-5px;box-shadow:-2px -2px 4px rgba(0,0,0,.15);}
-/* 箭头向右 */
-.glass-panel.arrow-right::after{right:-5px;top:50%;margin-top:-5px;box-shadow:3px -2px 4px rgba(0,0,0,.15);}
-/* 箭头向左 */
-.glass-panel.arrow-left::after{left:-5px;top:50%;margin-top:-5px;box-shadow:-3px 2px 4px rgba(0,0,0,.15);}
+/* 四个方向的箭头规则全部删除，原来 opacity:1 的设置不再生效 */
 
 /* === 弹簧浮现动画 === */
+/* 从按钮方向'吐'出来：起点对准按钮，终点是面板最终位置 */
 @keyframes glass-pop{
-  from{transform:scale(0.75) translateY(8px);opacity:0;}
+  from{transform:scale(0.82) translateY(0);opacity:0;}
   to{  transform:scale(1) translateY(0);opacity:1;}
+}
+@keyframes glass-pop-down{  /* 面板在按钮下方：从按钮向下展开 */
+  from{transform:scale(0.82) translateY(-4px);opacity:0;}
+  to{  transform:scale(1) translateY(0);opacity:1;}
+}
+@keyframes glass-pop-up{    /* 面板在按钮上方：从按钮向上展开 */
+  from{transform:scale(0.82) translateY(4px);opacity:0;}
+  to{  transform:scale(1) translateY(0);opacity:1;}
+}
+@keyframes glass-pop-left{  /* 面板在按钮左侧：从按钮向右展开 */
+  from{transform:scale(0.82) translateX(4px);opacity:0;}
+  to{  transform:scale(1) translateX(0);opacity:1;}
+}
+@keyframes glass-pop-right{ /* 面板在按钮右侧：从按钮向左展开 */
+  from{transform:scale(0.82) translateX(-4px);opacity:0;}
+  to{  transform:scale(1) translateX(0);opacity:1;}
 }
 @keyframes glass-pop-x{
   from{transform:scale(0.75) translateX(8px);opacity:0;}
@@ -493,17 +636,22 @@ img{display:block;-webkit-user-drag:none;}
 }
 .glass-panel{display:none;}
 .glass-panel.show{
-  display:block;
+  display:flex;flex-direction:column;
   animation:glass-pop .28s cubic-bezier(0.34,1.56,0.64,1) both;
   transform-origin:top center;
 }
+/* 方向专属动画 + transform-origin：起点对准按钮那一侧 */
+.glass-panel.arrow-bottom.show{animation:glass-pop-down .28s cubic-bezier(0.34,1.56,0.64,1) both;transform-origin:top center;}
+.glass-panel.arrow-top.show{   animation:glass-pop-up   .28s cubic-bezier(0.34,1.56,0.64,1) both;transform-origin:bottom center;}
+.glass-panel.arrow-left.show{  animation:glass-pop-left .28s cubic-bezier(0.34,1.56,0.64,1) both;transform-origin:right center;}
+.glass-panel.arrow-right.show{ animation:glass-pop-right .28s cubic-bezier(0.34,1.56,0.64,1) both;transform-origin:left center;}
 .glass-panel.show-x{
-  display:block;
+  display:flex;flex-direction:column;
   animation:glass-pop-x .28s cubic-bezier(0.34,1.56,0.64,1) both;
   transform-origin:left center;
 }
 .glass-panel.hiding{
-  display:block;
+  display:flex;flex-direction:column;
   animation:glass-close .18s ease-in both;
 }
 
@@ -514,7 +662,7 @@ img{display:block;-webkit-user-drag:none;}
   transition:opacity .2s ease;
   pointer-events:none; /* 默认不拦截点击，弹窗自己的 outside 逻辑处理 */
 }
-#popup-backdrop.active{display:block;opacity:1;}
+#popup-backdrop.active{display:block;opacity:1;pointer-events:auto;cursor:default;}
 
 /* sheet 底部面板 */
 .sheet{
@@ -533,11 +681,13 @@ img{display:block;-webkit-user-drag:none;}
   border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:background .15s,box-shadow .15s,transform .15s;
 }
-.sheet-btn:hover{background:rgba(22,22,32,0.80);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 22px var(--glass-btn-shadow);transform:translateY(-1px);}
-.sheet-btn:active,.sheet-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:0 1px 0 rgba(255,255,255,0.08) inset,0 2px 8px var(--glass-btn-shadow);}
+.sheet-btn:hover{background:rgba(255,255,255,0.14);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);transform:translateY(-1px);}
+.sheet-btn:active,.sheet-btn.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
+.sheet-btn.primary{justify-content:center;background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.18);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.20),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 4px 12px rgba(0,0,0,0.30);font-weight:600;color:var(--text);}
+.sheet-btn.primary:hover{background:rgba(255,255,255,0.18);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.25),inset 0 -0.5px 0 0 rgba(0,0,0,0.15),0 6px 18px rgba(0,0,0,0.40);}
 /* stagger 动画 */
 .sheet-btn:nth-child(1){animation:glass-item .22s ease both .02s}
 .sheet-btn:nth-child(2){animation:glass-item .22s ease both .05s}
@@ -590,30 +740,34 @@ img{display:block;-webkit-user-drag:none;}
   background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:transform .15s,box-shadow .15s,background .15s;cursor:pointer;
 }
-#tapback-bar .tb:hover{background:rgba(22,22,32,0.80);transform:scale(1.08);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 20px var(--glass-btn-shadow);}
-#tapback-bar .tb:active,#tapback-bar .tb.pressing{animation:jelly-press .22s ease forwards;}
+#tapback-bar .tb:hover{background:rgba(255,255,255,0.14);transform:scale(1.08);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+#tapback-bar .tb:active,#tapback-bar .tb.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 #tapback-bar .tb.sel{background:color-mix(in oklch, var(--accent) 50%, transparent);box-shadow:0 0 12px color-mix(in oklch, var(--accent) 40%, transparent);}
 
 /* 颜色面板 */
-#color-bar{min-width:230px;}
-/* gp-scroll 内部：flex-wrap 换行 */
+#color-bar{min-width:280px;max-width:340px;}
+/* gp-scroll 内部：横向滑动一行 */
 #color-bar .gp-scroll{
-  display:flex;gap:8px;flex-wrap:wrap;padding:12px;
+  display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;padding:12px;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
 }
+#color-bar .gp-scroll::-webkit-scrollbar{display:none;}
 #color-bar .c{
-  width:38px;height:38px;border-radius:50%;cursor:pointer;
+  width:38px;height:38px;border-radius:50%;cursor:pointer;flex:0 0 auto;
+  scroll-snap-align:start;
   border:1px solid rgba(255,255,255,0.12);
   background:var(--glass-btn-bg);
   backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
   -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
-  box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 4px 16px var(--glass-btn-shadow);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
   transition:transform .15s,box-shadow .15s;
 }
-#color-bar .c:hover{transform:scale(1.1) translateY(-1px);box-shadow:0 1px 0 var(--glass-btn-shine) inset,0 6px 22px var(--glass-btn-shadow);}
-#color-bar .c:active,#color-bar .c.pressing{animation:jelly-press .22s ease forwards;}
+#color-bar .c:hover{transform:scale(1.1) translateY(-1px);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 6px 18px rgba(0,0,0,0.45);}
+#color-bar .c:active,#color-bar .c.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 
 /* 通用弹窗(表单) — 居中毛玻璃 */
 .modal{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.15);padding:20px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
@@ -621,15 +775,16 @@ img{display:block;-webkit-user-drag:none;}
 .modal .card{
   width:100%;max-width:360px;
   max-height:80vh;overflow-y:auto;
-  background:rgba(20,20,28,0.82);
-  backdrop-filter:blur(24px) saturate(1.3);
-  -webkit-backdrop-filter:blur(24px) saturate(1.3);
-  border-radius:22px;
-  padding:22px 18px 18px;
+  background:var(--glass-btn-bg);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  border:1px solid var(--glass-btn-bd);
+  border-radius:20px;
+  padding:18px 16px 16px;
   box-shadow:
-    0 0 0 0.5px rgba(255,255,255,0.10),
-    0 16px 48px rgba(0,0,0,.6),
-    0 4px 16px rgba(0,0,0,.35);
+    inset 0 0.5px 0 0 var(--glass-btn-shine),
+    inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),
+    0 4px 12px var(--glass-btn-shadow);
   animation:glass-pop .30s cubic-bezier(0.34,1.56,0.64,1) both;
   position:relative;
   overscroll-behavior:contain;
@@ -659,11 +814,28 @@ img{display:block;-webkit-user-drag:none;}
 .row-av .avatar{cursor:pointer;}
 
 /* 音乐库 */
-#music-lib{position:fixed;right:12px;top:64px;width:240px;max-height:calc(100dvh - 64px - 80px);overflow-y:auto;background:var(--bg-glass);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--border);border-radius:16px;padding:8px;z-index:55;display:none;}
+#music-lib{position:fixed;right:12px;top:64px;width:260px;max-height:calc(100dvh - 64px - 80px);overflow-y:auto;display:none;z-index:55;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 4px 12px var(--glass-btn-shadow);
+  border-radius:20px;padding:12px;
+}
+#music-lib.active{display:block;}
 #music-lib.active{display:block;}
 .music-item{display:flex;align-items:center;gap:10px;padding:9px;border-radius:12px;}
 .music-item:active{background:var(--glass-strong);}
-.music-item .ply{width:30px;height:30px;border-radius:50%;background:var(--glass-strong);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.music-item .ply{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--glass-btn-bg);border:1px solid var(--glass-btn-bd);
+  backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  -webkit-backdrop-filter:blur(var(--glass-btn-blur)) saturate(180%);
+  box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 3px 10px var(--glass-btn-shadow);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  transition:transform .15s,box-shadow .15s;
+}
+.music-item .ply:hover{transform:scale(1.06);box-shadow:inset 0 0.5px 0 0 var(--glass-btn-shine),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 5px 14px rgba(0,0,0,0.40);}
+.music-item .ply:active,.music-item .ply.pressing{animation:jelly-press .22s ease forwards;box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.08),inset 0 -0.5px 0 0 var(--glass-btn-inset-dark),0 2px 6px rgba(0,0,0,0.25);}
 .music-item .ply svg{width:14px;height:14px;stroke:var(--text);fill:var(--text);stroke-width:0;}
 .music-item .ti{flex:1;min-width:0;}
 .music-item .ti .t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -686,11 +858,43 @@ img{display:block;-webkit-user-drag:none;}
 
 /* 选择联系人弹窗列表 */
 .pick-list{max-height:50vh;overflow-y:auto;}
+/* 浮动选择联系人面板（贴近按钮的玻璃面板） */
+#group-picker-panel{
+  width:280px;max-width:92vw;
+  padding:0;
+  display:flex;flex-direction:column;
+  max-height:min(70vh,420px);
+}
+#group-picker-panel .gp-head{padding:12px 14px 10px;text-align:center;font-size:14px;color:var(--text);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.06);flex:0 0 auto;}
+#group-picker-panel .gp-scroll{flex:1;min-height:0;overflow-y:auto;padding:6px 8px;}
+#group-picker-panel .gp-foot{padding:8px 10px 10px;border-top:1px solid rgba(255,255,255,0.06);flex:0 0 auto;}
+#group-picker-panel .gp-btn{
+  width:100%;height:38px;border-radius:12px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;color:var(--text);
+  background:rgba(255,255,255,0.10);
+  border:1px solid rgba(255,255,255,0.14);
+  box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.18),inset 0 -0.5px 0 0 rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.25);
+  transition:all .15s ease;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+#group-picker-panel .gp-btn:hover{background:rgba(255,255,255,0.16);transform:translateY(-1px);box-shadow:inset 0 0.5px 0 0 rgba(255,255,255,0.22),inset 0 -0.5px 0 0 rgba(0,0,0,0.12),0 4px 14px rgba(0,0,0,0.35);}
+#group-picker-panel .gp-btn:active{animation:jelly-press .22s ease forwards;background:rgba(255,255,255,0.20);}
+#group-picker-panel .gp-btn:disabled{opacity:0.4;cursor:not-allowed;}
+/* 向上指箭头（贴在按钮下方的面板） */
+.gp-arrow-up{
+  position:absolute;top:-7px;right:18px;width:14px;height:14px;
+  background:rgba(28,28,38,0.72);
+  border-left:1px solid rgba(255,255,255,0.12);
+  border-top:1px solid rgba(255,255,255,0.12);
+  transform:rotate(45deg);
+  border-top-left-radius:3px;
+  z-index:1;
+}
 .pick-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;}
 .pick-item:active{background:var(--glass);}
-.pick-item .check{width:22px;height:22px;border-radius:50%;border:2px solid var(--text-faint);flex:0 0 auto;display:flex;align-items:center;justify-content:center;}
+.pick-item .check{width:22px;height:22px;border-radius:50%;border:2px solid var(--text-faint);flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.pick-item .check svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;display:none;} /* 关键：未勾选时不显示小勾 */
 .pick-item.on .check{background:var(--accent);border-color:var(--accent);}
-.pick-item.on .check svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+.pick-item.on .check svg{display:block;}
 
 /* 进度 */
 .toast{position:absolute;left:50%;top:42%;transform:translateX(-50%);background:rgba(0,0,0,.78);padding:12px 20px;border-radius:14px;z-index:90;font-size:14px;display:none;}
@@ -700,6 +904,7 @@ img{display:block;-webkit-user-drag:none;}
 </style>
 </head>
 <body>
+<div id="wallpaper"></div>
 <div id="app">
   <!-- 聊天列表 -->
   <section id="view-chats" class="view active">
@@ -801,6 +1006,7 @@ img{display:block;-webkit-user-drag:none;}
           <button class="icon-btn" id="draw-close" title="关闭">✕</button>
         </div>
         <canvas id="draw-canvas"></canvas>
+        <div class="draw-resize" id="draw-resize" title="拖动调节画板高度"><span></span></div>
         <div class="draw-tools">
           <span class="pen sel" data-c="#ff5a6a" style="background:#ff5a6a"></span>
           <span class="pen" data-c="#ffd60a" style="background:#ffd60a"></span>
@@ -1052,8 +1258,15 @@ function renderChats(){
     el.className='chat-item'; el.dataset.id=c.id;
     el.innerHTML=`${avatarHtml(av,chatTitle(c))}
       <div class="meta"><div class="name">${esc(chatTitle(c))}</div><div class="prev">${esc(prev.text)}</div></div>
-      <div class="right">${c.unread?`<div class="badge">${c.unread}</div>`:''}<div style="font-size:11px">${c.pinned?'置顶':''}</div></div>`;
+      <div class="right">${c.unread?`<div class="badge">${c.unread}</div>`:''}<div style="font-size:11px">${c.pinned?'置顶':''}</div></div>
+      <div class="more-btn" title="更多操作">⋯</div>`;
     el.addEventListener('click',()=>{ if(State._dragMoved)return; openChat(c.id); });
+    {const mb=el.querySelector('.more-btn');
+      // 关键：pointerdown 阶段就拦截，阻止 enableLongPress 的 timer 启动
+      mb.addEventListener('pointerdown',e=>e.stopPropagation());
+      // click 用 stopImmediatePropagation 强拦（stopPropagation 在某些场景会被其他 handler 绕过）
+      mb.addEventListener('click',e=>{e.stopImmediatePropagation();e.preventDefault();chatMenu(c,mb);});
+    }
     enableLongPress(el,()=>chatMenu(c,el));
     enableDragSort(el,'chats',c.id);
     wrap.appendChild(el);
@@ -1071,8 +1284,13 @@ function renderContacts(){
     const el=document.createElement('div');
     el.className='contact-item'; el.dataset.id=c.id;
     el.innerHTML=`${avatarHtml(c.avatar,c.name)}
-      <div class="meta"><div class="name">${esc(c.name)}</div><div class="prev" style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:${c.color||'#888'}"></span>主题色</div></div>`;
+      <div class="meta"><div class="name">${esc(c.name)}</div><div class="prev" style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:${c.color||'#888'}"></span>主题色</div></div>
+      <div class="more-btn" title="更多操作">⋯</div>`;
     el.addEventListener('click',()=>{ if(State._dragMoved)return; startChatWith(c.id); });
+    {const mb=el.querySelector('.more-btn');
+      mb.addEventListener('pointerdown',e=>e.stopPropagation());
+      mb.addEventListener('click',e=>{e.stopImmediatePropagation();e.preventDefault();contactMenu(c,mb);});
+    }
     enableLongPress(el,()=>contactMenu(c,el));
     enableDragSort(el,'contacts',c.id);
     wrap.appendChild(el);
@@ -1161,7 +1379,7 @@ function chatMenu(c,anchor){
   </div>`;
   const rect=anchor.getBoundingClientRect();
   const cmw=220, cmh=280;
-  const pos=calcPanelPos(rect,cmw,cmh,16);
+  const pos=calcPanelPos(rect,cmw,cmh,6);
   cm.style.top=pos.top+'px'; cm.style.left=pos.left+'px';
   showBackdrop();
   glassShow(cm);
@@ -1200,7 +1418,7 @@ function contactMenu(c,anchor){
   </div>`;
   const rect=anchor.getBoundingClientRect();
   const cmw=220, cmh=260;
-  const pos=calcPanelPos(rect,cmw,cmh,16);
+  const pos=calcPanelPos(rect,cmw,cmh,6);
   cm.style.top=pos.top+'px'; cm.style.left=pos.left+'px';
   showBackdrop();
   glassShow(cm);
@@ -1350,7 +1568,8 @@ function quoteText(m){if(m.type==='text'||m.type==='sticker')return m.text;if(m.
 function contentHtml(m){
   switch(m.type){
     case 'text': return esc(m.text).replace(/\n/g,'<br>');
-    case 'image': case 'drawing': return `<img class="att" src="${blobUrl(m.blob)}" onclick="viewImage('${m.id}')">`;
+    case 'image': return `<img class="att" src="${blobUrl(m.blob)}" onclick="viewImage('${m.id}')">`;
+    case 'drawing': return `<div class="att-draw"><img class="att" src="${blobUrl(m.blob)}" onclick="viewImage('${m.id}')"></div>`;
     case 'sticker': return `<img class="att" src="${blobUrl(m.blob)}" style="max-width:140px">`;
     case 'voice': return `<div class="voice-play" onclick="playVoice('${m.id}')"><svg class="wave" viewBox="0 0 24 24"><path d="M3 12h3l2-7 4 14 3-9 2 4h4"/></svg><span style="font-size:12px">${m.dur||''} 点击播放</span></div>`;
     case 'file': return `<div class="file-chip" onclick="dlFile('${m.id}')"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg><div class="fn"><div class="t">${esc(m.fileName)}</div><div class="s">${fmtSize(m.size||0)} · 点击下载</div></div></div>`;
@@ -1511,8 +1730,8 @@ window.tryOpenNetease=songId=>{
 };
 /* 点击音乐库里的音乐 */
 window.libMusicPlay=id=>{const m=State.music.find(x=>x.id===id);if(m){const a=$('#global-audio');a.src=m.url;a.play();showToast('播放:'+m.title);$('#music-lib').classList.remove('active');}};
-window.editPlace=id=>{const m=findMsg(id);if(!m)return;promptModal('修改地点','输入地点名称',m.placeName||'',async v=>{m.placeName=v;await put('messages',m);renderMessages();});};
-window.editLocImg=id=>{const m=findMsg(id);if(!m)return;pickImage(async blob=>{m.mapBlob=blob;await put('messages',m);renderMessages();});};
+window.editPlace=id=>{const m=findMsg(id);if(!m)return;promptModal('修改地点','输入地点名称',m.placeName||'',async v=>{m.placeName=v;await put('messages',m);keepScroll(()=>renderMessages());});};
+window.editLocImg=id=>{const m=findMsg(id);if(!m)return;pickImage(async blob=>{m.mapBlob=blob;await put('messages',m);keepScroll(()=>renderMessages());});};
 
 /* ===================== 消息长按菜单(10项) ===================== */
 function msgMenu(m){
@@ -1533,16 +1752,23 @@ function msgMenu(m){
   // 按钮锚定定位
   const row=$(`.msg-row[data-id="${m.id}"]`);
   const r=row.getBoundingClientRect();
-  const cmh=280, cmw=185;
-  const pos=calcPanelPos(r,cmw,cmh,16);
+  // 临时显示以测量真实尺寸（visibility:hidden 不参与命中也不可见）
+  cm.style.display='flex';
+  cm.style.visibility='hidden';
+  cm.className='glass-panel';
+  const cmw=cm.offsetWidth||185;
+  const cmh=cm.offsetHeight||280;
+  const pos=calcPanelPos(r,cmw,cmh,6);
   cm.style.top=pos.top+'px'; cm.style.left=pos.left+'px';
-  cm.style.display='';
+  cm.style.visibility='';
   cm.className='glass-panel show '+(pos.dir==='up'?'arrow-top':'arrow-bottom');
-  // 用真实尺寸二次夹紧，防止项目多时被屏幕边缘遮住
-  requestAnimationFrame(()=>clampPanelToViewport(cm));
+  // 动画前夹紧一次（用真实布局尺寸）
+  clampPanelToViewport(cm);
+  // 动画结束后再夹紧一次（动画从 scale(0.75) 到 scale(1)，确保最终位置也在视口内）
+  setTimeout(()=>clampPanelToViewport(cm),320);
   showBackdrop();
   cm.querySelectorAll('.cm').forEach(b=>b.onclick=()=>{glassHide(cm);handleMsgAction(b.dataset.a,m);});
-  const close=()=>{glassHide(cm);document.removeEventListener('pointerdown',outside,true);};
+  const close=()=>{glassHide(cm);hideBackdrop();document.removeEventListener('pointerdown',outside,true);};
   function outside(e){if(!cm.contains(e.target))close();}
   setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
 }
@@ -1579,19 +1805,21 @@ function calcPanelPos(anchorRect,pw,ph,gap){
   return{top,left,dir};
 }
 
-/* 面板实际渲染后，用真实尺寸二次夹紧(不受 scale 变形影响,16px 安全边距) */
+/* 面板实际渲染后，用真实尺寸二次夹紧(不受 scale 变形影响,16px 安全边距)
+   关键：用 style.top + offsetHeight 算边界，不用 getBoundingClientRect——
+   后者会受 transform:scale 动画影响返回缩放后的视觉尺寸 */
 function clampPanelToViewport(el){
   const SAFE=16;
   const vp=getViewport();
   const vw=vp.w,vh=vp.h,vTop=vp.top;
-  // offsetWidth/Height 是布局尺寸，不受 transform 缩放影响
   const pw=el.offsetWidth, ph=el.offsetHeight;
   if(!pw||!ph)return;
-  const r=el.getBoundingClientRect();
-  if(r.bottom>vh+vTop-SAFE)el.style.top=(vh+vTop-ph-SAFE)+'px';
-  if(r.top<vTop+SAFE)el.style.top=(vTop+SAFE)+'px';
-  if(r.right>vw-SAFE)el.style.left=(vw-pw-SAFE)+'px';
-  if(r.left<SAFE)el.style.left=SAFE+'px';
+  let top=parseFloat(el.style.top)||0;
+  let left=parseFloat(el.style.left)||0;
+  if(top+ph>vh+vTop-SAFE)el.style.top=(vh+vTop-ph-SAFE)+'px';
+  else if(top<vTop+SAFE)el.style.top=(vTop+SAFE)+'px';
+  if(left+pw>vw-SAFE)el.style.left=(vw-pw-SAFE)+'px';
+  else if(left<SAFE)el.style.left=SAFE+'px';
 }
 
 /* 旋转/软键盘/窗口变化时重新夹紧所有可见弹窗(主调用) */
@@ -1613,6 +1841,8 @@ if(window.visualViewport){
 /* 显示玻璃面板（带动画） */
 function glassShow(el){
   el.classList.remove('hiding');
+  // 关键：清除 glassHide 留下的内联 style.display='none'，否则会压过 CSS 的 .show{display:flex}
+  el.style.display='';
   void el.offsetWidth; // reflow 触发重绘
   el.classList.add('show');
 }
@@ -1625,18 +1855,38 @@ function glassHide(el){
   }
   el.classList.remove('show');
   el.classList.add('hiding');
-  el.addEventListener('animationend',()=>{el.classList.remove('hiding');hideBackdrop();},{once:true});
+  let done=false;
+  const finish=()=>{
+    if(done)return;
+    done=true;
+    el.classList.remove('hiding');
+    el.style.display='none';
+    el.removeEventListener('animationend',onEnd);
+    hideBackdrop();
+  };
+  // 只认 glass-close 动画的结束事件——不要被中途被中断的 show 动画的 animationend 误触发
+  const onEnd=e=>{if(e.animationName==='glass-close')finish();};
+  el.addEventListener('animationend',onEnd);
+  // 兜底：220ms 后强制隐藏（动画时长 .18s，保留一点余量；防止 animationend 不触发）
+  setTimeout(finish,220);
 }
 /* 背景遮罩控制 */
 function showBackdrop(){$('#popup-backdrop').classList.add('active');}
 function hideBackdrop(){$('#popup-backdrop').classList.remove('active');}
+/* 点遮罩关闭所有打开的弹窗（兑底机制：即使 outside 逻辑漏掉，这里也能关） */
+$('#popup-backdrop').addEventListener('pointerdown',e=>{
+  e.stopPropagation();
+  // 找出当前所有 .glass-panel.show 并关闭
+  document.querySelectorAll('.glass-panel.show').forEach(p=>glassHide(p));
+  hideBackdrop();
+},{capture:true});
 async function handleMsgAction(a,m){
   if(a==='quote'){State.quoteId=m.id;showQuotePreview(m);return;}
   if(a==='edit'){openInline('message',m.id);return;}
   if(a==='del'){deleteMsg(m.id);return;}
   if(a==='copy'){const t=plainText(m);navigator.clipboard&&navigator.clipboard.writeText(t);showToast('已复制');return;}
   if(a==='inner'){ if(m.innerThought){openInline('inner',m.id);} else {openInline('inner',m.id);} return;}
-  if(a==='ts'){ if(m.timestampText){editTs(m);} else {m.timestampText=fmtNow();await put('messages',m);renderMessages();} return;}
+  if(a==='ts'){ if(m.timestampText){editTs(m);} else {m.timestampText=fmtNow();await put('messages',m);keepScroll(()=>renderMessages());} return;}
   if(a==='insert'){openInsert(m.id);return;}
   if(a==='multi'){enterSelectMode();return;}
   if(a==='tap'){openTapback(m);return;}
@@ -1651,7 +1901,7 @@ function editTs(m){
   const now=new Date();
   const def=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   promptModal('插入时间戳','格式:2026/10/1 20:03',m.timestampText||def,async v=>{
-    m.timestampText=v;await put('messages',m);renderMessages();
+    m.timestampText=v;await put('messages',m);keepScroll(()=>renderMessages());
   });
 }
 
@@ -1661,7 +1911,7 @@ function openTapback(m,idxToRemove){
   bar.innerHTML=`<div class="gp-scroll">`+TAPBACKS.map(t=>`<div class="tb" data-t="${t}">${t}</div>`).join('')+`</div>`;
   const row=$(`.msg-row[data-id="${m.id}"]`);const r=row.getBoundingClientRect();
   const bw=Math.min(400,r.width*3+20), bh=60;
-  const pos=calcPanelPos(r,bw,bh,16);
+  const pos=calcPanelPos(r,bw,bh,6);
   bar.style.top=pos.top+'px'; bar.style.left=pos.left+'px';
   bar.style.display='';
   bar.className='glass-panel show'+(pos.dir==='up'?' arrow-top':'');
@@ -1672,10 +1922,10 @@ function openTapback(m,idxToRemove){
     if(typeof idxToRemove==='number'){m.tapbacks.splice(idxToRemove,1);}
     if(b.classList.contains('sel')){m.tapbacks=m.tapbacks.filter(x=>x!==b.dataset.t);}
     else{m.tapbacks.push(b.dataset.t);}
-    await put('messages',m);glassHide(bar);renderMessages();
+    await put('messages',m);glassHide(bar);keepScroll(()=>renderMessages());
   });
   (m.tapbacks||[]).forEach(t=>{const el=bar.querySelector(`[data-t="${t}"]`);if(el)el.classList.add('sel');});
-  const close=()=>{glassHide(bar);document.removeEventListener('pointerdown',outside,true);};
+  const close=()=>{glassHide(bar);hideBackdrop();document.removeEventListener('pointerdown',outside,true);};
   function outside(e){if(!bar.contains(e.target))close();}
   setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
 }
@@ -1686,14 +1936,14 @@ function openColor(m){
   bar.innerHTML=`<div class="gp-scroll">`+COLORS.map((c,i)=>`<span class="c" data-idx="${i}" style="background:${c}"></span>`).join('')+`</div>`;
   const row=$(`.msg-row[data-id="${m.id}"]`);const r=row.getBoundingClientRect();
   const bw=240, bh=200;
-  const pos=calcPanelPos(r,bw,bh,16);
+  const pos=calcPanelPos(r,bw,bh,6);
   bar.style.top=pos.top+'px'; bar.style.left=pos.left+'px';
   bar.style.display='';
   bar.className='glass-panel show'+(pos.dir==='up'?' arrow-top':'');
   requestAnimationFrame(()=>clampPanelToViewport(bar));
   showBackdrop();
   bar.querySelectorAll('.c').forEach(b=>b.onclick=async()=>{const idx=parseInt(b.dataset.idx);const color=COLORS[idx];m.color=color;await put('messages',m);glassHide(bar);keepScroll(()=>renderMessages());});
-  const close=()=>{glassHide(bar);document.removeEventListener('pointerdown',outside,true);};
+  const close=()=>{glassHide(bar);hideBackdrop();document.removeEventListener('pointerdown',outside,true);};
   function outside(e){if(!bar.contains(e.target))close();}
   setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
 }
@@ -1716,7 +1966,7 @@ async function saveInline(){
   await put('messages',m);
   $('#inline-edit').classList.remove('active');
   State.editTarget=null;
-  renderMessages(); // 不自动回底
+  keepScroll(()=>renderMessages()); // 不自动回底，保留位置
 }
 
 /* 插入消息(悬浮小框) */
@@ -1948,11 +2198,31 @@ let drawCtx,drawColor='#ff5a6a',drawStack=[];
 function toggleDraw(on){
   $('#plus-panel').classList.remove('active');
   $('#draw-panel').classList.toggle('active',on);
-  if(on){const cv=$('#draw-canvas');const rect=cv.getBoundingClientRect();const h=rect.height||320;cv.width=rect.width*devicePixelRatio;cv.height=h*devicePixelRatio;drawCtx=cv.getContext('2d');drawCtx.scale(devicePixelRatio,devicePixelRatio);drawCtx.lineCap='round';drawCtx.lineJoin='round';drawCtx.strokeStyle=drawColor;drawCtx.lineWidth=3;}
+  if(on){initDrawCanvas();}
+}
+/* 重设画布尺寸与上下文（resize handle 也用），保留已有内容 */
+function initDrawCanvas(){
+  const cv=$('#draw-canvas');
+  const dataUrl=drawCtx?cv.toDataURL():null;  // 保留画过的痕迹
+  const rect=cv.getBoundingClientRect();
+  cv.width=rect.width*devicePixelRatio;
+  cv.height=rect.height*devicePixelRatio;
+  drawCtx=cv.getContext('2d');
+  drawCtx.scale(devicePixelRatio,devicePixelRatio);
+  drawCtx.lineCap='round';
+  drawCtx.lineJoin='round';
+  drawCtx.strokeStyle=drawColor;
+  drawCtx.lineWidth=3;
+  if(dataUrl){
+    const img=new Image();
+    img.onload=()=>{drawCtx.drawImage(img,0,0,rect.width,rect.height);};
+    img.src=dataUrl;
+  }
 }
 function initDrawEvents(){
   const cv=$('#draw-canvas');let drawing=false,last=null;
-  function pos(e){const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+  // 关键：用 offsetX/offsetY，相对画布 padding-box，不受 scroll/transform 影响，完美同步笔触
+  function pos(e){return {x:e.offsetX, y:e.offsetY};}
   cv.addEventListener('pointerdown',e=>{if(!drawCtx)return;drawing=true;last=pos(e);drawCtx.beginPath();drawCtx.moveTo(last.x,last.y);try{cv.setPointerCapture(e.pointerId);}catch(_){}});
   cv.addEventListener('pointermove',e=>{if(!drawing||!drawCtx)return;const pt=pos(e);drawCtx.lineTo(pt.x,pt.y);drawCtx.stroke();last=pt;});
   cv.addEventListener('pointerup',e=>{if(drawing){drawing=false;drawStack.push(cv.toDataURL());}});
@@ -1960,8 +2230,25 @@ function initDrawEvents(){
   $('#draw-clear').onclick=()=>{if(!drawCtx)return;drawCtx.clearRect(0,0,cv.width,cv.height);drawStack=[];};
   $('#draw-undo').onclick=()=>{if(!drawCtx)return;drawStack.pop();redraw();};
   function redraw(){if(!drawCtx)return;drawCtx.clearRect(0,0,cv.width,cv.height);/* 简化:撤销仅清空当前未保存 */}
-  $('#draw-send').onclick=()=>{if(!drawCtx)return;const cv=$('#draw-canvas');const rect=cv.getBoundingClientRect();const ratio=rect.height/rect.width;const outW=800;const outH=Math.round(outW*ratio);const oc=document.createElement('canvas');oc.width=outW;oc.height=outH;const octx=oc.getContext('2d');octx.fillStyle='#1a1d2a';octx.fillRect(0,0,outW,outH);octx.drawImage(cv,0,0,outW,outH);oc.toBlob(async b=>{if(b){await sendBlob('drawing',{blob:b});}$('#draw-panel').classList.remove('active');});};
+  // 发送：宽随画布自适应，高度=画布高度（保持原比例），画板高度可调就完整传递
+  $('#draw-send').onclick=()=>{if(!drawCtx)return;const cv=$('#draw-canvas');const rect=cv.getBoundingClientRect();const outW=Math.round(rect.width*devicePixelRatio);const outH=Math.round(rect.height*devicePixelRatio);const oc=document.createElement('canvas');oc.width=outW;oc.height=outH;const octx=oc.getContext('2d');octx.fillStyle='#1a1d2a';octx.fillRect(0,0,outW,outH);octx.drawImage(cv,0,0,outW,outH);oc.toBlob(async b=>{if(b){await sendBlob('drawing',{blob:b});}$('#draw-panel').classList.remove('active');});};
   $('#draw-close').onclick=()=>{$('#draw-panel').classList.remove('active');};
+  // 画板高度调节手柄
+  let resY0=0,resH0=0;
+  const rh=$('#draw-resize');
+  rh.addEventListener('pointerdown',e=>{
+    resY0=e.clientY;resH0=cv.offsetHeight;
+    try{rh.setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault();e.stopPropagation();
+  });
+  rh.addEventListener('pointermove',e=>{
+    if(!resY0)return;
+    const d=e.clientY-resY0;
+    const nh=Math.max(150,Math.min(640,resH0+d));
+    cv.style.height=nh+'px';
+    initDrawCanvas();
+  });
+  rh.addEventListener('pointerup',e=>{resY0=0;try{rh.releasePointerCapture(e.pointerId);}catch(_){}});
 }
 
 /* ===================== 语音录制 ===================== */
@@ -2072,21 +2359,81 @@ function openStickerPicker(cb){
 }
 
 /* 新建群聊 */
-function newGroupChat(){newGroup();}
-function newGroup(){
+function newGroupChat(anchor){newGroup(anchor);}
+function newGroup(anchor){
   let picked=new Set();
-  const sheet=$('#sheet');
+  // 浮动玻璃面板，贴近触发按钮
+  const panel=document.createElement('div');
+  panel.className='glass-panel';
+  panel.id='group-picker-panel';
   const render=()=>{
-    sheet.innerHTML=`<div class="sheet-h">选择联系人建群</div><div class="pick-list">`+
+    panel.innerHTML=`<div class="gp-head">选择联系人建群</div>
+      <div class="gp-scroll pick-list">`+
       (sortedContacts().map(c=>`<div class="pick-item ${picked.has(c.id)?'on':''}" data-id="${c.id}"><div class="check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg></div>${avatarHtml(c.avatar,c.name,'sm')}<div class="meta"><div class="name">${esc(c.name)}</div></div></div>`).join('')||'<div style="padding:14px;color:var(--text-faint)">无联系人</div>')+
-      `</div><div class="sheet-btn primary" id="grp-create">创建群聊(${picked.size})</div>`;
-    sheet.querySelectorAll('.pick-item').forEach(it=>it.onclick=()=>{const id=it.dataset.id;if(picked.has(id))picked.delete(id);else picked.add(id);render();});
-    $('#grp-create').onclick=async()=>{if(picked.size===0){showToast('至少选1人');return;}closeSheet();
+      `</div>
+      <div class="gp-foot"><button class="gp-btn primary" id="grp-create">创建群聊 (${picked.size})</button></div>`;
+    panel.querySelectorAll('.pick-item').forEach(it=>it.onclick=()=>{const id=it.dataset.id;if(picked.has(id))picked.delete(id);else picked.add(id);render();});
+    panel.querySelector('#grp-create').onclick=async()=>{
+      if(picked.size===0){showToast('至少选1人');return;}
+      glassHide(panel);hideBackdrop();
+      setTimeout(()=>panel.remove(),250);
       const c={id:uid(),type:'group',title:null,avatar:null,participants:[...picked],order:State.chats.length,unread:0};
       State.chats.push(c);await put('chats',c);renderChats();openChat(c.id);
     };
   };
-  render();openSheet();
+  render();
+  document.body.appendChild(panel);
+  showBackdrop();
+  // 定位：贴近按钮（以顶栏右上角 + 为默认）
+  const target=anchor||document.querySelector('#new-group-btn')||document.querySelector('#new-chat-fab')||document.querySelector('#chat-new-btn');
+  if(target){
+    // 先隐藏测实际尺寸（避免 calcPanelPos 用猜的 width/height 偏差）
+    panel.style.position='fixed';
+    panel.style.visibility='hidden';
+    panel.style.display='flex';
+    panel.style.left='0';panel.style.top='0';
+    document.body.appendChild(panel);
+    const r=target.getBoundingClientRect();
+    const pw=panel.offsetWidth||280;
+    const ph=panel.offsetHeight||320;
+    let pos=calcPanelPos(r,pw,ph,8);
+    // 如果 + 按钮在屏幕右半边，重写 left 让面板**右边缘**对齐按钮**右边缘**（避免面板偏到左边）
+    const vp=getViewport();
+    if(r.left+r.width/2 > vp.w/2){
+      pos.left=Math.max(8, r.right-pw);
+    }
+    panel.style.position='fixed';
+    panel.style.visibility='';
+    panel.style.left=pos.left+'px';
+    panel.style.top=pos.top+'px';
+    panel.style.transform='';
+    // 加上连接箭头（只在按钮下方时才需要）
+    if(pos.dir==='down'){
+      const arrow=document.createElement('div');
+      arrow.className='gp-arrow-up';
+      // 箭头对准按钮中心（夹紧到面板内 12~pw-12）
+      const arrowX=Math.max(12,Math.min(pw-26, r.left+r.width/2-pos.left-7));
+      arrow.style.right=(pw-arrowX-7)+'px';
+      panel.insertBefore(arrow,panel.firstChild);
+    }
+  } else {
+    panel.style.position='fixed';
+    panel.style.left='50%';panel.style.top='50%';
+    panel.style.transform='translate(-50%,-50%)';
+  }
+  // 最终安全夹紧：防止面板任何情况下超出声口
+  clampPanelToViewport(panel);
+  // 显示动画
+  requestAnimationFrame(()=>{panel.classList.add('show');});
+  // 点外面关闭
+  setTimeout(()=>{
+    document.addEventListener('pointerdown',function outside(e){
+      if(panel.contains(e.target)||(target&&target.contains(e.target)))return;
+      glassHide(panel);hideBackdrop();
+      document.removeEventListener('pointerdown',outside,true);
+      setTimeout(()=>panel.remove(),250);
+    },true);
+  },0);
 }
 
 /* 编辑个人资料 */
@@ -2159,10 +2506,12 @@ async function applyBackground(css, theme){
   applyThemeColors(theme);
 }
 function applyBgToBody(){
+  const wp=$('#wallpaper');
+  if(!wp)return;
   if(State.chatBg){
-    document.body.style.background=State.chatBg;
+    wp.style.background=State.chatBg;
   }else{
-    document.body.style.background='';
+    wp.style.background='';
   }
 }
 function applyThemeColors(theme){
@@ -2309,7 +2658,7 @@ function bindGlobal(){
   // 返回
   $('#back-to-list').onclick=()=>{State.chatId=null;switchView('chats');};
   // 新建群聊
-  $('#new-chat-fab').onclick=newGroup;
+  $('#new-chat-fab').onclick=function(){newGroup(this);};
   // 添加联系人
   $('#add-contact').onclick=()=>{promptModal('添加联系人','输入名字','',async name=>{if(!name)return;colorModal(async col=>{const c={id:uid(),name,avatar:null,color:col,order:State.contacts.length};State.contacts.push(c);await put('contacts',c);renderContacts();});});};
   // 搜索
@@ -2323,8 +2672,8 @@ function bindGlobal(){
   $('#up-backup').onclick=uploadBackup;
   // 音乐库
   $('#music-lib-btn').onclick=toggleMusicLib;
-  $('#new-group-btn').onclick=newGroupChat;
-  $('#chat-new-btn').onclick=newGroupChat;
+  $('#new-group-btn').onclick=function(){newGroupChat(this);};
+  $('#chat-new-btn').onclick=function(){newGroupChat(this);};
   // 角色条已动态
   // 输入区
   const ta=$('#msg-input');
