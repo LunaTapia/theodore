@@ -1986,38 +1986,64 @@ async function saveInline(){
 /* 插入消息(悬浮小框) */
 function openInsert(afterId){
   const modal=$('#modal'); const card=$('#modal-card');
+  // 第一步：选择插入位置
   card.innerHTML=`<h3 style="color:var(--text)">✨ 插入消息</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;padding:12px 0">
-      <button class="mini-btn" data-t="text" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">📝 文本</button>
-      <button class="mini-btn" data-t="file" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">📎 文件</button>
-      <button class="mini-btn" data-t="music" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">🎵 音乐</button>
-      <button class="mini-btn" data-t="image" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">🖼️ 图片</button>
-      <button class="mini-btn" data-t="location" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">📍 定位</button>
-      <button class="mini-btn" data-t="sticker" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">😊 贴纸</button>
+    <p style="color:var(--text-dim);font-size:13px;margin:0 0 12px">选择插入位置</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="mini-btn" id="ins-above" style="background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:12px 16px;text-align:left;font-weight:500;">
+        <div style="font-size:15px">⬆️ 插入到上方</div>
+        <div style="font-size:11px;opacity:.6;margin-top:2px">在所选消息之前插入</div>
+      </button>
+      <button class="mini-btn" id="ins-below" style="background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:12px 16px;text-align:left;font-weight:500;">
+        <div style="font-size:15px">⬇️ 插入到下方</div>
+        <div style="font-size:11px;opacity:.6;margin-top:2px">在所选消息之后插入</div>
+      </button>
     </div>
-    <div class="acts"><button class="mini-btn" id="ins-cancel" style="background:rgba(255,100,100,.2);color:#ff8888;border:1px solid rgba(255,100,100,.3);">取消</button></div>`;
+    <div class="acts" style="margin-top:14px"><button class="mini-btn" id="ins-cancel" style="background:rgba(255,100,100,.2);color:#ff8888;border:1px solid rgba(255,100,100,.3);">取消</button></div>`;
   modal.classList.add('active');
   $('#ins-cancel').onclick=()=>modal.classList.remove('active');
-  card.querySelectorAll('[data-t]').forEach(b=>b.onclick=async()=>{
-    const t=b.dataset.t; modal.classList.remove('active');
-    if(t==='text'){promptModal('插入文本','输入内容','', v=>{insertMsg(afterId,{type:'text',text:v});});}
-    else if(t==='image'){pickImage(f=>insertMsg(afterId,{type:'image',blob:f}));}
-    else if(t==='file'){pickFile(f=>insertMsg(afterId,{type:'file',blob:f,fileName:f.name,size:f.size}));}
-    else if(t==='music'){promptModal('网易云音乐链接','粘贴分享链接','',async v=>{const info=parseMusic(v);insertMsg(afterId,{type:'music',url:info.url,title:info.title,artist:info.artist});addMusic(info);});}
-    else if(t==='location'){
-      // 先选择地图图片,再输入地点名称
-      pickImage(mapBlob=>{
-        promptModal('定位地点','输入地点名称,如:英国伦敦贝克街221B','',async v=>{
-          insertMsg(afterId,{type:'location',placeName:v,lat:51.5237,lng:-0.1586,mapBlob});
+  // 位置选择后，展示内容类型选择
+  function showTypePicker(before){
+    card.innerHTML=`<h3 style="color:var(--text)">✨ 插入消息 — ${before?'上方':'下方'}</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;padding:12px 0">
+        <button class="mini-btn" data-t="text" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">📝 文本</button>
+        <button class="mini-btn" data-t="file" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">📎 文件</button>
+        <button class="mini-btn" data-t="music" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">🎵 音乐</button>
+        <button class="mini-btn" data-t="image" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">🖼️ 图片</button>
+        <button class="mini-btn" data-t="location" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">📍 定位</button>
+        <button class="mini-btn" data-t="sticker" style="flex:1;min-width:80px;background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:10px;font-weight:600;">😊 贴纸</button>
+      </div>
+      <div class="acts"><button class="mini-btn" id="ins-back" style="background:rgba(255,255,255,.08);border:1px solid var(--border-soft);">← 返回</button><button class="mini-btn" id="ins-cancel2" style="background:rgba(255,100,100,.2);color:#ff8888;border:1px solid rgba(255,100,100,.3);">取消</button></div>`;
+    $('#ins-cancel2').onclick=()=>modal.classList.remove('active');
+    $('#ins-back').onclick=()=>openInsert(afterId);
+    card.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{
+      const t=b.dataset.t; modal.classList.remove('active');
+      if(t==='text'){promptModal('插入文本','输入内容','', v=>{insertMsg(afterId,{type:'text',text:v},before);});}
+      else if(t==='image'){pickImage(f=>insertMsg(afterId,{type:'image',blob:f},before));}
+      else if(t==='file'){pickFile(f=>insertMsg(afterId,{type:'file',blob:f,fileName:f.name,size:f.size},before));}
+      else if(t==='music'){promptModal('网易云音乐链接','粘贴分享链接','',async v=>{const info=parseMusic(v);insertMsg(afterId,{type:'music',url:info.url,title:info.title,artist:info.artist},before);addMusic(info);});}
+      else if(t==='location'){
+        pickImage(mapBlob=>{
+          promptModal('定位地点','输入地点名称,如:英国伦敦贝克街221B','',async v=>{
+            insertMsg(afterId,{type:'location',placeName:v,lat:51.5237,lng:-0.1586,mapBlob},before);
+          });
         });
-      });
-    }
-    else if(t==='sticker'){openStickerPicker(s=>insertMsg(afterId,{type:'sticker',blob:s}));}
-  });
+      }
+      else if(t==='sticker'){openStickerPicker(s=>insertMsg(afterId,{type:'sticker',blob:s},before));}
+    });
+  }
+  $('#ins-above').onclick=()=>showTypePicker(true);
+  $('#ins-below').onclick=()=>showTypePicker(false);
 }
-async function insertMsg(afterId,data){
+async function insertMsg(afterId,data,before){
   const arr=State.messages[State.chatId]; const idx=arr.findIndex(x=>x.id===afterId);
-  const order = idx<0? (arr.length?arr[arr.length-1].order+1:1) : arr[idx].order+0.5;
+  let order;
+  if(before){ // 插入到所选消息上方
+    if(idx<=0){ order=(arr.length?arr[0].order-1:1); } // 插到最前
+    else{ order=(arr[idx-1].order+arr[idx].order)/2; } // 两消息之间
+  }else{ // 插入到所选消息下方（原有逻辑）
+    order = idx<0? (arr.length?arr[arr.length-1].order+1:1) : arr[idx].order+0.5;
+  }
   const c=State.chats.find(x=>x.id===State.chatId);
   const msg={id:uid(),chatId:State.chatId,senderId:State.role,order, ...data};
   arr.push(msg); arr.sort((a,b)=>a.order-b.order);
