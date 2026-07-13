@@ -1987,9 +1987,13 @@ async function saveInline(){
 /* 插入消息(悬浮小框) */
 function openInsert(afterId){
   const modal=$('#modal'); const card=$('#modal-card');
+  // 获取所选消息的时间戳，作为插入消息的默认时间
+  const refMsg=findMsg(afterId);
+  const refTs=refMsg?.timestampText || (refMsg?.ts?fmtTime(refMsg.ts):null);
+
   // 第一步：选择插入位置
   card.innerHTML=`<h3 style="color:var(--text)">✨ 插入消息</h3>
-    <p style="color:var(--text-dim);font-size:13px;margin:0 0 12px">选择插入位置</p>
+    <p style="color:var(--text-dim);font-size:13px;margin:0 0 12px">${refTs?`时间将设为: <b style="color:var(--text)">${refTs}</b>`:'选择插入位置'}</p>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="mini-btn" id="ins-above" style="background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:12px 16px;text-align:left;font-weight:500;">
         <div style="font-size:15px">⬆️ 插入到上方</div>
@@ -2019,18 +2023,18 @@ function openInsert(afterId){
     $('#ins-back').onclick=()=>openInsert(afterId);
     card.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{
       const t=b.dataset.t; modal.classList.remove('active');
-      if(t==='text'){promptModal('插入文本','输入内容','', v=>{insertMsg(afterId,{type:'text',text:v},before);});}
-      else if(t==='image'){pickImage(f=>insertMsg(afterId,{type:'image',blob:f},before));}
-      else if(t==='file'){pickFile(f=>insertMsg(afterId,{type:'file',blob:f,fileName:f.name,size:f.size},before));}
-      else if(t==='music'){promptModal('网易云音乐链接','粘贴分享链接','',async v=>{const info=parseMusic(v);insertMsg(afterId,{type:'music',url:info.url,title:info.title,artist:info.artist},before);addMusic(info);});}
+      if(t==='text'){promptModal('插入文本','输入内容','', v=>{insertMsg(afterId,{type:'text',text:v,timestampText:refTs},before);});}
+      else if(t==='image'){pickImage(f=>insertMsg(afterId,{type:'image',blob:f,timestampText:refTs},before));}
+      else if(t==='file'){pickFile(f=>insertMsg(afterId,{type:'file',blob:f,fileName:f.name,size:f.size,timestampText:refTs},before));}
+      else if(t==='music'){promptModal('网易云音乐链接','粘贴分享链接','',async v=>{const info=parseMusic(v);insertMsg(afterId,{type:'music',url:info.url,title:info.title,artist:info.artist,timestampText:refTs},before);addMusic(info);});}
       else if(t==='location'){
         pickImage(mapBlob=>{
           promptModal('定位地点','输入地点名称,如:英国伦敦贝克街221B','',async v=>{
-            insertMsg(afterId,{type:'location',placeName:v,lat:51.5237,lng:-0.1586,mapBlob},before);
+            insertMsg(afterId,{type:'location',placeName:v,lat:51.5237,lng:-0.1586,mapBlob,timestampText:refTs},before);
           });
         });
       }
-      else if(t==='sticker'){openStickerPicker(s=>insertMsg(afterId,{type:'sticker',blob:s},before));}
+      else if(t==='sticker'){openStickerPicker(s=>insertMsg(afterId,{type:'sticker',blob:s,timestampText:refTs},before));}
     });
   }
   $('#ins-above').onclick=()=>showTypePicker(true);
