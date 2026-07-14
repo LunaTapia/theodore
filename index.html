@@ -1155,15 +1155,15 @@ async function init(){
     const c2={id:'user_2',name:'顾晨曦',avatar:null,color:'#34d399',order:1};
     State.contacts.push(c1,c2);
     const msgs1=[
-      {id:uid(),chatId:'chat_demo',senderId:'user_1',type:'text',text:'终于找到组织了!',ts:Date.now()-3600000},
-      {id:uid(),chatId:'chat_demo',senderId:'me',type:'text',text:'欢迎欢迎~这里是语C多角色聊天',ts:Date.now()-3500000},
-      {id:uid(),chatId:'chat_demo',senderId:'user_1',type:'text',text:'我刚学会一个超可爱的说话方式',ts:Date.now()-3000000},
-      {id:uid(),chatId:'chat_demo',senderId:'user_2',type:'text',text:'什么什么?快说来听听!',ts:Date.now()-2900000},
-      {id:uid(),chatId:'chat_demo',senderId:'user_1',type:'text',text:'就是...嘿嘿(*/ω\*)',ts:Date.now()-2800000},
+      {id:uid(),chatId:'chat_demo',senderId:'user_1',type:'text',text:'终于找到组织了!',ts:Date.now()-3600000,order:1},
+      {id:uid(),chatId:'chat_demo',senderId:'me',type:'text',text:'欢迎欢迎~这里是语C多角色聊天',ts:Date.now()-3500000,order:2},
+      {id:uid(),chatId:'chat_demo',senderId:'user_1',type:'text',text:'我刚学会一个超可爱的说话方式',ts:Date.now()-3000000,order:3},
+      {id:uid(),chatId:'chat_demo',senderId:'user_2',type:'text',text:'什么什么?快说来听听!',ts:Date.now()-2900000,order:4},
+      {id:uid(),chatId:'chat_demo',senderId:'user_1',type:'text',text:'就是...嘿嘿(*/ω\*)',ts:Date.now()-2800000,order:5},
     ];
     const msgs2=[
-      {id:uid(),chatId:'chat_2',senderId:'user_2',type:'text',text:'你看了今天的剧本吗',ts:Date.now()-7200000},
-      {id:uid(),chatId:'chat_2',senderId:'me',type:'text',text:'看了看了!剧情好绝',ts:Date.now()-7100000},
+      {id:uid(),chatId:'chat_2',senderId:'user_2',type:'text',text:'你看了今天的剧本吗',ts:Date.now()-7200000,order:1},
+      {id:uid(),chatId:'chat_2',senderId:'me',type:'text',text:'看了看了!剧情好绝',ts:Date.now()-7100000,order:2},
     ];
     State.chats=[
       {id:'chat_demo',type:'group',title:'语C聊天室',avatar:null,participants:['user_1','user_2'],order:0,unread:0},
@@ -1201,7 +1201,11 @@ async function loadAll(){
   const msgs=await getAll('messages');
   State.messages={};
   msgs.forEach(m=>{(State.messages[m.chatId]=State.messages[m.chatId]||[]).push(m);});
-  for(const k in State.messages) State.messages[k].sort((a,b)=>a.order-b.order);
+  for(const k in State.messages){
+    State.messages[k].sort((a,b)=>(a.order??a.ts??0)-(b.order??b.ts??0));
+    // 给没有order的老消息按顺序赋值，否则插入消息时order计算会变成NaN
+    State.messages[k].forEach((m,i)=>{if(m.order==null){m.order=i+1;put('messages',m);}});
+  }
 }
 async function persistAll(){ // 保存 me 资料
   await put('meta','me',State.me);
@@ -1504,7 +1508,7 @@ function fmtTime(ts){
 }
 function renderMessages(){
   const scroll=$('#convo-scroll'); const cid=State.chatId; if(!cid)return;
-  const arr=(State.messages[cid]||[]).slice().sort((a,b)=>a.order-b.order);
+  const arr=(State.messages[cid]||[]).slice().sort((a,b)=>(a.order??a.ts??0)-(b.order??b.ts??0));
   const c=State.chats.find(x=>x.id===cid);
   scroll.innerHTML='';
   if(!arr.length){scroll.innerHTML='<div class="empty">开始你们的对话吧</div>';return;}
@@ -1901,7 +1905,7 @@ async function handleMsgAction(a,m){
   if(a==='del'){deleteMsg(m.id);return;}
   if(a==='copy'){const t=plainText(m);navigator.clipboard&&navigator.clipboard.writeText(t);showToast('已复制');return;}
   if(a==='inner'){ if(m.innerThought){openInline('inner',m.id);} else {openInline('inner',m.id);} return;}
-  if(a==='ts'){ if(m.timestampText){editTs(m);} else {m.timestampText=fmtNow();await put('messages',m);keepScrollInPlace(()=>renderMessages());} return;}
+  if(a==='ts'){ if(m.timestampText){editTs(m);} else {m.timestampText=fmtTime(m.ts)||fmtNow();await put('messages',m);keepScrollInPlace(()=>renderMessages());} return;}
   if(a==='insert'){openInsert(m.id);return;}
   if(a==='multi'){enterSelectMode();return;}
   if(a==='tap'){openTapback(m);return;}
@@ -1987,13 +1991,8 @@ async function saveInline(){
 /* 插入消息(悬浮小框) */
 function openInsert(afterId){
   const modal=$('#modal'); const card=$('#modal-card');
-  // 获取所选消息的时间戳，作为插入消息的默认时间
-  const refMsg=findMsg(afterId);
-  const refTs=refMsg?.timestampText || (refMsg?.ts?fmtTime(refMsg.ts):null);
-
   // 第一步：选择插入位置
   card.innerHTML=`<h3 style="color:var(--text)">✨ 插入消息</h3>
-    <p style="color:var(--text-dim);font-size:13px;margin:0 0 12px">${refTs?`时间将设为: <b style="color:var(--text)">${refTs}</b>`:'选择插入位置'}</p>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="mini-btn" id="ins-above" style="background:var(--glass-strong);border:1px solid var(--border-soft);border-radius:14px;padding:12px 16px;text-align:left;font-weight:500;">
         <div style="font-size:15px">⬆️ 插入到上方</div>
@@ -2023,18 +2022,18 @@ function openInsert(afterId){
     $('#ins-back').onclick=()=>openInsert(afterId);
     card.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{
       const t=b.dataset.t; modal.classList.remove('active');
-      if(t==='text'){promptModal('插入文本','输入内容','', v=>{insertMsg(afterId,{type:'text',text:v,timestampText:refTs},before);});}
-      else if(t==='image'){pickImage(f=>insertMsg(afterId,{type:'image',blob:f,timestampText:refTs},before));}
-      else if(t==='file'){pickFile(f=>insertMsg(afterId,{type:'file',blob:f,fileName:f.name,size:f.size,timestampText:refTs},before));}
-      else if(t==='music'){promptModal('网易云音乐链接','粘贴分享链接','',async v=>{const info=parseMusic(v);insertMsg(afterId,{type:'music',url:info.url,title:info.title,artist:info.artist,timestampText:refTs},before);addMusic(info);});}
+      if(t==='text'){promptModal('插入文本','输入内容','', v=>{insertMsg(afterId,{type:'text',text:v},before);});}
+      else if(t==='image'){pickImage(f=>insertMsg(afterId,{type:'image',blob:f},before));}
+      else if(t==='file'){pickFile(f=>insertMsg(afterId,{type:'file',blob:f,fileName:f.name,size:f.size},before));}
+      else if(t==='music'){promptModal('网易云音乐链接','粘贴分享链接','',async v=>{const info=parseMusic(v);insertMsg(afterId,{type:'music',url:info.url,title:info.title,artist:info.artist},before);addMusic(info);});}
       else if(t==='location'){
         pickImage(mapBlob=>{
           promptModal('定位地点','输入地点名称,如:英国伦敦贝克街221B','',async v=>{
-            insertMsg(afterId,{type:'location',placeName:v,lat:51.5237,lng:-0.1586,mapBlob,timestampText:refTs},before);
+            insertMsg(afterId,{type:'location',placeName:v,lat:51.5237,lng:-0.1586,mapBlob},before);
           });
         });
       }
-      else if(t==='sticker'){openStickerPicker(s=>insertMsg(afterId,{type:'sticker',blob:s,timestampText:refTs},before));}
+      else if(t==='sticker'){openStickerPicker(s=>insertMsg(afterId,{type:'sticker',blob:s},before));}
     });
   }
   $('#ins-above').onclick=()=>showTypePicker(true);
@@ -2049,9 +2048,13 @@ async function insertMsg(afterId,data,before){
   }else{ // 插入到所选消息下方（原有逻辑）
     order = idx<0? (arr.length?arr[arr.length-1].order+1:1) : arr[idx].order+0.5;
   }
+  if(!isFinite(order)) order=arr.length?arr[arr.length-1].order+1:1; // 兜底
+  // sender 取长按的那条消息的发言者和时间，不是当前用户
+  const refMsg=arr.find(x=>x.id===afterId);
+  const senderId=refMsg?refMsg.senderId:State.role;
   const c=State.chats.find(x=>x.id===State.chatId);
-  const msg={id:uid(),chatId:State.chatId,senderId:State.role,order, ...data};
-  arr.push(msg); arr.sort((a,b)=>a.order-b.order);
+  const msg={id:uid(),chatId:State.chatId,ts:(refMsg&&refMsg.ts)?refMsg.ts:Date.now(),senderId,order, ...data};
+  arr.push(msg); arr.sort((a,b)=>(a.order??a.ts??0)-(b.order??b.ts??0));
   await put('messages',msg);
   syncLocalBackup();
   // 更新预览
@@ -2099,7 +2102,7 @@ async function mergeSelected(){
   for(const m of sel){await del('messages',m.id);const i=arr.findIndex(x=>x.id===m.id);if(i>=0)arr.splice(i,1);}
   // 插入到原第一条位置(用 first.order,保证新消息在原位)
   arr.push(newMsg);
-  arr.sort((a,b)=>a.order-b.order).forEach((m,i)=>m.order=i);
+  arr.sort((a,b)=>(a.order??a.ts??0)-(b.order??b.ts??0)).forEach((m,i)=>m.order=i);
   await put('messages',newMsg);
   State.selIds.clear();State.selMode=false;renderMessages();
   showToast('已合并为一条');
@@ -2114,7 +2117,8 @@ async function chainSelected(){
 async function sendText(){
   const ta=$('#msg-input'); let text=ta.value.trim(); if(!text&&!State.quoteId)return;
   const arr=State.messages[State.chatId]||(State.messages[State.chatId]=[]);
-  const order=arr.length?arr[arr.length-1].order+1:1;
+  const lastOrd=arr.length?arr[arr.length-1].order:null;
+  const order=isFinite(lastOrd)?lastOrd+1:arr.length+1;
   const msg={id:uid(),chatId:State.chatId,senderId:State.role,order,type:'text',text,ts:Date.now()};
   if(State.quoteId){msg.quoteId=State.quoteId;State.quoteId=null;}
   arr.push(msg);await put('messages',msg);
@@ -2146,7 +2150,8 @@ function clearQuotePreview(){
 }
 async function sendBlob(type,data){
   const arr=State.messages[State.chatId]||(State.messages[State.chatId]=[]);
-  const order=arr.length?arr[arr.length-1].order+1:1;
+  const lastOrd=arr.length?arr[arr.length-1].order:null;
+  const order=isFinite(lastOrd)?lastOrd+1:arr.length+1;
   const msg={id:uid(),chatId:State.chatId,senderId:State.role,order,type,...data,ts:Date.now()};
   if(State.quoteId){msg.quoteId=State.quoteId;State.quoteId=null;}
   arr.push(msg);await put('messages',msg);
