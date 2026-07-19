@@ -2370,6 +2370,7 @@ function openExportSheet(){
   sheet.innerHTML=`<div class="sheet-h">📥 导出「${esc(title)}」</div>
     <div style="padding:4px 6px 10px;font-size:12px;color:var(--text-faint);text-align:center">共 ${arr.length} 条消息</div>
     <button class="sheet-btn" data-a="txt"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>导出为 TXT 文本</button>
+    <button class="sheet-btn" data-a="pdf"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13h2v3H9zM13 13h2v3h-2z"/></svg>导出为 PDF</button>
     <button class="sheet-btn" data-a="clip"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>复制到剪贴板</button>
     <button class="sheet-btn" data-a="cancel" style="color:var(--text-faint)">取消</button>`;
 
@@ -2404,6 +2405,7 @@ function openExportSheet(){
     glassHide(sheet);
     const a=b.dataset.a;
     if(a==='txt'){doExportChat(arr,title,'txt');}
+    else if(a==='pdf'){doExportPDF(arr,title);}
     else if(a==='clip'){doExportChat(arr,title,'clip');}
   });
 }
@@ -2441,6 +2443,76 @@ function doExportChat(arr,title,mode){
     URL.revokeObjectURL(a.href);
     showToast('已导出 TXT');
   }
+}
+
+/* PDF 导出：利用浏览器原生 print → "另存为 PDF"，零依赖、中文完美支持 */
+function doExportPDF(arr,title){
+  if(!arr.length){showToast('暂无消息可导出');return;}
+  const safeTitle=esc(title);
+  // 将每条消息渲染为 HTML 片段
+  const msgHtml=arr.map(m=>{
+    const sender=esc(contactName(m.senderId));
+    const ts=m.timestampText||(m.ts?fmtTime(m.ts):'');
+    let body='';
+    if(m.type==='text'||m.type==='sticker'){body=m.text||(m.type==='sticker'?'[贴纸]':'');}
+    else if(m.type==='image'||m.type==='drawing'){body='<span class="placeholder">[图片]</span>';}
+    else if(m.type==='voice'){body='<span class="placeholder">🎙️ [语音消息] '+(m.dur||'')+'</span>';}
+    else if(m.type==='file'){body='<span class="placeholder">📎 [文件] '+esc(m.fileName||'')+'</span>';}
+    else if(m.type==='music'){body='<span class="placeholder">🎵 [音乐] '+esc(m.title||'')+'</span>';}
+    else if(m.type==='location'){body='<span class="placeholder">📍 [定位] '+esc(m.placeName||'')+'</span>';}
+    else{body=esc(m.text||'');}
+    return `<div class="msg">
+      <div class="msg-head"><span class="sender">${sender}</span>${ts?`<span class="msg-time">${esc(ts)}</span>`:''}</div>
+      <div class="msg-body">${body.replace(/\n/g,'<br>')}</div>
+      ${m.innerThought?`<div class="msg-inner">💭 ${esc(m.innerThought).replace(/\n/g,'<br>')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>${safeTitle} - 聊天导出</title>
+<style>
+  @page{size:A4;margin:18mm;}
+  *{box-sizing:border-box;}
+  body{font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Heiti SC",sans-serif;line-height:1.7;color:#1a1a1a;margin:0;padding:0;font-size:13px;}
+  .header{text-align:center;border-bottom:2px solid #5b3df0;padding-bottom:12px;margin-bottom:24px;}
+  .header h1{margin:0 0 8px;font-size:22px;color:#5b3df0;font-weight:700;}
+  .header .meta{color:#888;font-size:12px;}
+  .msg{margin:14px 0;page-break-inside:avoid;}
+  .msg-head{font-size:13px;margin-bottom:4px;}
+  .sender{font-weight:700;color:#5b3df0;}
+  .msg-time{color:#999;font-size:11px;margin-left:8px;font-weight:400;}
+  .msg-body{padding:8px 12px;background:#f6f4ff;border-radius:8px;color:#2a2a2a;white-space:pre-wrap;word-wrap:break-word;}
+  .msg-body .placeholder{color:#888;font-style:italic;}
+  .msg-inner{font-style:italic;color:#666;font-size:12px;margin-top:4px;padding:6px 12px;background:#faf8ff;border-left:3px solid #c4b5fd;border-radius:0 6px 6px 0;}
+  .footer{text-align:center;color:#aaa;font-size:11px;margin-top:32px;padding-top:14px;border-top:1px solid #eee;}
+  @media print{
+    body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+    .no-print{display:none!important;}
+  }
+</style></head>
+<body>
+<div class="header">
+  <h1>📋 ${safeTitle}</h1>
+  <div class="meta">导出时间：${esc(fmtNow())} · 共 ${arr.length} 条消息</div>
+</div>
+${msgHtml}
+<div class="footer">— 聊天记录导出 · 共 ${arr.length} 条 —</div>
+</body></html>`;
+
+  // 隐藏 iframe 调用打印，避免弹窗拦截、中文乱码
+  const iframe=document.createElement('iframe');
+  iframe.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  document.body.appendChild(iframe);
+  const idoc=iframe.contentDocument||iframe.contentWindow.document;
+  idoc.open();
+  idoc.write(html);
+  idoc.close();
+  // 等 CSS 生效后触发打印
+  setTimeout(()=>{
+    try{iframe.contentWindow.focus();iframe.contentWindow.print();}
+    catch(e){showToast('PDF 导出失败：'+e.message);}
+    setTimeout(()=>{if(iframe.parentNode)iframe.parentNode.removeChild(iframe);},1500);
+  },500);
 }
 
 /* ===================== 选择/弹窗 ===================== */
