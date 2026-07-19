@@ -978,6 +978,9 @@ img{display:block;-webkit-user-drag:none;}
       <button class="icon-btn" id="chat-new-btn" title="新建群聊">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
+      <button class="icon-btn" id="export-btn" title="导出聊天">
+        <svg viewBox="0 0 24 24"><path d="M12 3v13M7 10l5 5 5-5"/><path d="M4 18h16"/></svg>
+      </button>
     </div>
     <div id="convo-scroll"></div>
     <div id="music-lib"></div>
@@ -1045,6 +1048,7 @@ img{display:block;-webkit-user-drag:none;}
 <!-- 浮层们 -->
 <div id="popup-backdrop"></div>
 <div class="overlay" id="sheet-overlay"><div class="sheet glass-panel" id="sheet"></div></div>
+<div id="export-sheet" class="glass-panel sheet"></div>
 <div id="ctx-menu" class="glass-panel"></div>
 <div id="tapback-bar" class="glass-panel"></div>
 <div id="color-bar" class="glass-panel"></div>
@@ -2347,6 +2351,98 @@ function toggleMusicLib(){
   lib.querySelectorAll('.del-music').forEach(btn=>btn.onclick=async e=>{e.stopPropagation();const id=btn.dataset.id;await del('music',id);State.music=State.music.filter(x=>x.id!==id);toggleMusicLib();toggleMusicLib();showToast('已删除');});
 }
 
+/* ===================== 导出聊天 ===================== */
+function openExportSheet(){
+  const cid=State.chatId;
+  if(!cid){showToast('请先打开一个聊天');return;}
+  const c=State.chats.find(x=>x.id===cid);
+  const title=chatTitle(c||{});
+  const arr=(State.messages[cid]||[]).slice().sort((a,b)=>(a.order??a.ts??0)-(b.order??b.ts??0));
+
+  // 关闭其他已打开的弹窗，避免叠在一起
+  document.querySelectorAll('.glass-panel.show').forEach(p=>{
+    if(p.id!=='export-sheet') glassHide(p);
+  });
+
+  const btn=$('#export-btn');
+  const btnRect=btn.getBoundingClientRect();
+  const sheet=$('#export-sheet');
+  sheet.innerHTML=`<div class="sheet-h">📥 导出「${esc(title)}」</div>
+    <div style="padding:4px 6px 10px;font-size:12px;color:var(--text-faint);text-align:center">共 ${arr.length} 条消息</div>
+    <button class="sheet-btn" data-a="txt"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>导出为 TXT 文本</button>
+    <button class="sheet-btn" data-a="clip"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>复制到剪贴板</button>
+    <button class="sheet-btn" data-a="cancel" style="color:var(--text-faint)">取消</button>`;
+
+  // 先显示以测量真实尺寸
+  sheet.style.display='';
+  sheet.style.visibility='hidden';
+  sheet.style.position='fixed';
+  sheet.style.zIndex='60';
+  const pw=sheet.offsetWidth||220, ph=sheet.offsetHeight||220;
+
+  // 锚定按钮定位：弹窗右边与按钮左边对齐，间距 12px；不超屏幕边距 24px
+  const gap=10;
+  let top=btnRect.bottom+gap, left=btnRect.left-pw-12;
+  if(top+ph>window.innerHeight-16){top=btnRect.top-ph-gap;}
+  left=Math.max(16,Math.min(window.innerWidth-pw-24,left));
+  top=Math.max(16,Math.min(window.innerHeight-ph-16,top));
+  sheet.style.top=top+'px';
+  sheet.style.left=left+'px';
+  sheet.style.right='auto';
+  sheet.style.bottom='auto';
+  sheet.style.visibility='';
+
+  showBackdrop();
+  glassShow(sheet);
+
+  // 点击遮罩 → 全局 backdrop handler 会关闭（已在 init 中绑定）
+  // 但需阻止 sheet 内部点击冒泡到 backdrop
+  sheet.addEventListener('pointerdown',e=>e.stopPropagation());
+  // 按钮选项
+  sheet.querySelectorAll('.sheet-btn').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    glassHide(sheet);
+    const a=b.dataset.a;
+    if(a==='txt'){doExportChat(arr,title,'txt');}
+    else if(a==='clip'){doExportChat(arr,title,'clip');}
+  });
+}
+function doExportChat(arr,title,mode){
+  if(!arr.length){showToast('暂无消息可导出');return;}
+  let text=`【${title}】\n`;
+  text+=`导出时间：${fmtNow()}\n`;
+  text+='─'.repeat(28)+'\n';
+  let lastSender='';
+  arr.forEach(m=>{
+    const sender=contactName(m.senderId);
+    const ts=m.timestampText||(m.ts?fmtTime(m.ts):'');
+    if(sender!==lastSender){text+='\n'+(sender?'【'+sender+'】':'')+' '+(ts?'('+ts+')':'')+'\n';lastSender=sender;}
+    else if(ts){text+='  '+ts+'\n';}
+    const content=plainText(m).trim();
+    if(content)text+=content+'\n';
+    else if(m.type==='image'||m.type==='drawing')text+='[图片]\n';
+    else if(m.type==='voice')text+='[语音 '+esc(m.dur||'')+']\n';
+    else if(m.type==='file')text+='[文件: '+esc(m.fileName||'')+']\n';
+    else if(m.type==='music')text+='[音乐: '+esc(m.title||'')+']\n';
+    else if(m.type==='location')text+='[定位: '+esc(m.placeName||'')+']\n';
+    else if(m.type==='sticker')text+='[表情贴纸]\n';
+  });
+  text+='─'.repeat(28)+'\n共 '+arr.length+' 条消息\n';
+  if(mode==='clip'){
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>showToast('已复制到剪贴板'));}
+    else{prompt('复制以下内容：',text);}
+  }else{
+    const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    const safe=title.replace(/[<>:"/\\|?*]/g,'_').trim()||'聊天';
+    a.download=`${safe}_${fmtNow().replace(/[/:\s]/g,'')}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('已导出 TXT');
+  }
+}
+
 /* ===================== 选择/弹窗 ===================== */
 function pickImage(cb){const i=$('#img-input');i.value='';i.onchange=()=>{if(i.files[0])cb(i.files[0]);};i.click();}
 function pickCam(cb){const i=$('#cam-input');i.value='';i.onchange=()=>{if(i.files[0])cb(i.files[0]);};i.click();}
@@ -2581,9 +2677,14 @@ function applyThemeColors(theme){
 /* 轻量备份:不打包 blob,体积会小 10~100 倍 */
 async function downloadBackup(lightweight){
   showToast('正在打包备份...');
-  const data={v:1,mode:lightweight?'lite':'full',ts:Date.now(),me:null,contacts:[],chats:[],messages:[],stickers:[],music:[]};
+  const data={v:1,mode:lightweight?'lite':'full',ts:Date.now(),me:null,chatBg:null,chatTheme:null,contacts:[],chats:[],messages:[],stickers:[],music:[]};
   const me=await get('meta','me');
   data.me=me?{name:me.name,avatar:lightweight?null:(me.avatar?await blobToB64(me.avatar):null)}:null;
+  // 备份壁纸/主题
+  const bgMeta=await get('meta','chatBg');
+  const themeMeta=await get('meta','chatTheme');
+  if(bgMeta&&bgMeta.css) data.chatBg=bgMeta.css;
+  if(themeMeta&&themeMeta.theme) data.chatTheme=themeMeta.theme;
   for(const c of State.contacts) data.contacts.push({...c,avatar:lightweight?null:(c.avatar?await blobToB64(c.avatar):null)});
   for(const c of State.chats) data.chats.push({...c,avatar:lightweight?null:(c.avatar?await blobToB64(c.avatar):null)});
   const allMsgs=await getAll('messages');
@@ -2641,6 +2742,17 @@ async function uploadBackup(){
         else{await put('stickers',{id:s.id});}
       }
       for(const m of (data.music||[])){await put('music',m);}
+      // 恢复壁纸/主题
+      if(data.chatBg){
+        await put('meta',{id:'chatBg',css:data.chatBg});
+        State.chatBg=data.chatBg;
+      }
+      if(data.chatTheme){
+        await put('meta',{id:'chatTheme',theme:data.chatTheme});
+        State.chatTheme=data.chatTheme;
+      }
+      applyBgToBody();
+      applyThemeColors(State.chatTheme);
       await loadAll();renderAll();
       syncLocalBackup();
       showToast('恢复完成('+(data.contacts?.length||0)+' 联系人,'+(data.messages?.length||0)+' 消息)');
@@ -2650,7 +2762,7 @@ async function uploadBackup(){
 /* localStorage 同步备份(不含 blob,仅元数据,限 5MB) */
 function syncLocalBackup(){
   try{
-    const lite={v:1,ts:Date.now(),me:State.me?{name:State.me.name,color:State.me.color}:null,contacts:State.contacts,chats:State.chats,messages:{},stickers:State.stickers.map(s=>({id:s.id})),music:State.music};
+    const lite={v:2,ts:Date.now(),me:State.me?{name:State.me.name,color:State.me.color}:null,chatBg:State.chatBg||null,chatTheme:State.chatTheme||null,contacts:State.contacts,chats:State.chats,messages:{},stickers:State.stickers.map(s=>({id:s.id})),music:State.music};
     for(const cid in State.messages){
       lite.messages[cid]=State.messages[cid].map(m=>{
         const o={id:m.id,senderId:m.senderId,order:m.order,type:m.type,text:m.text||'',ts:m.ts,quoteId:m.quoteId,innerThought:m.innerThought,timestampText:m.timestampText,chained:m.chained,color:m.color,tapbacks:m.tapbacks,fileName:m.fileName,size:m.size,dur:m.dur,placeName:m.placeName,lat:m.lat,lng:m.lng,url:m.url,title:m.title,artist:m.artist,songId:m.songId};
@@ -2678,6 +2790,17 @@ async function tryRestoreFromLocal(){
     }
     for(const s of data.stickers||[]) await put('stickers',s);
     for(const m of data.music||[]) await put('music',m);
+    // 恢复壁纸/主题
+    if(data.chatBg){
+      await put('meta',{id:'chatBg',css:data.chatBg});
+      State.chatBg=data.chatBg;
+    }
+    if(data.chatTheme){
+      await put('meta',{id:'chatTheme',theme:data.chatTheme});
+      State.chatTheme=data.chatTheme;
+    }
+    applyBgToBody();
+    applyThemeColors(State.chatTheme);
     return true;
   }catch(e){console.warn('restore from local failed',e);return false;}
 }
@@ -2725,6 +2848,8 @@ function bindGlobal(){
   $('#music-lib-btn').onclick=toggleMusicLib;
   $('#new-group-btn').onclick=function(){newGroupChat(this);};
   $('#chat-new-btn').onclick=function(){newGroupChat(this);};
+  // 导出聊天
+  $('#export-btn').onclick=openExportSheet;
   // 角色条已动态
   // 输入区
   const ta=$('#msg-input');
